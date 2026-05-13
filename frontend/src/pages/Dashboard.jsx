@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { HiUserGroup, HiOfficeBuilding, HiExclamation, HiCurrencyDollar } from 'react-icons/hi';
 
 const Dashboard = () => {
@@ -7,6 +8,7 @@ const Dashboard = () => {
     totalStudents: 0, occupancy: '0/0', pendingComplaints: 0, unpaidFees: 0
   });
   const user = JSON.parse(localStorage.getItem('user'));
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user.role === 'admin' || user.role === 'warden') {
@@ -29,14 +31,26 @@ const Dashboard = () => {
   if (user.role === 'admin' || user.role === 'warden') {
     return (
       <div className="p-8 bg-slate-950 min-h-screen">
-        <h1 className="text-3xl font-bold text-white mb-2">Hostel Overview</h1>
+        <h1 className="text-3xl font-bold text-white mb-2 text-glow">Hostel Overview</h1>
         <p className="text-slate-400 mb-10">Welcome back, {user.name}. Here is what's happening today.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Total Students" value={stats.totalStudents} icon={<HiUserGroup />} color="bg-indigo-500" />
-          <StatCard title="Occupancy" value={stats.occupancy} icon={<HiOfficeBuilding />} color="bg-emerald-500" />
-          <StatCard title="Pending" value={stats.pendingComplaints} icon={<HiExclamation />} color="bg-rose-500" />
-          <StatCard title="Unpaid Fees" value={`$${stats.unpaidFees}`} icon={<HiCurrencyDollar />} color="bg-amber-500" />
+          <StatCard 
+            title="Total Students" value={stats.totalStudents} icon={<HiUserGroup />} color="bg-indigo-500" 
+            onClick={() => navigate('/students')}
+          />
+          <StatCard 
+            title="Occupancy" value={stats.occupancy} icon={<HiOfficeBuilding />} color="bg-emerald-500" 
+            onClick={() => navigate('/rooms')}
+          />
+          <StatCard 
+            title="Pending" value={stats.pendingComplaints} icon={<HiExclamation />} color="bg-rose-500" 
+            onClick={() => navigate('/complaints')}
+          />
+          <StatCard 
+            title="Unpaid Fees" value={`$${stats.unpaidFees}`} icon={<HiCurrencyDollar />} color="bg-amber-500" 
+            onClick={() => navigate('/fees')}
+          />
         </div>
 
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -80,9 +94,12 @@ const Dashboard = () => {
   );
 };
 
-const StatCard = ({ title, value, icon, color }) => (
-  <div className="glass-card p-6 flex items-center gap-6">
-    <div className={`p-4 rounded-2xl ${color} text-white text-2xl shadow-lg`}>
+const StatCard = ({ title, value, icon, color, onClick }) => (
+  <div 
+    onClick={onClick}
+    className="glass-card p-6 flex items-center gap-6 cursor-pointer hover:scale-[1.03] active:scale-95 transition-all duration-300 group"
+  >
+    <div className={`p-4 rounded-2xl ${color} text-white text-2xl shadow-lg group-hover:shadow-indigo-500/20`}>
       {icon}
     </div>
     <div>

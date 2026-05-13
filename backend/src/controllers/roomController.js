@@ -89,3 +89,16 @@ exports.deallocateRoom = async (req, res, next) => {
     conn.release();
   }
 };
+
+exports.updateRoom = async (req, res, next) => {
+  const { room_number, block, capacity } = req.body;
+  try {
+    await db.query(
+      'UPDATE rooms SET room_number = ?, block = ?, capacity = ? WHERE room_id = ?',
+      [room_number, block, capacity, req.params.id]
+    );
+    res.json({ success: true, message: 'Room updated' });
+  } catch (error) {
+    next(error);
+  }
+};

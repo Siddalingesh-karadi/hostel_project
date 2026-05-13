@@ -16,7 +16,8 @@ const Sidebar = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'student', 'warden'] },
+    { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student'] },
+    { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student', 'admin', 'warden'] },
     { name: 'Students', path: '/students', icon: <HiUserGroup />, roles: ['admin', 'warden'] },
     { name: 'Rooms', path: '/rooms', icon: <HiOfficeBuilding />, roles: ['admin', 'warden'] },
     { name: 'Complaints', path: '/complaints', icon: <HiExclamation />, roles: ['admin', 'student', 'warden'] },

@@ -24,7 +24,14 @@ exports.register = async (req, res, next) => {
       [name, email, hashedPassword, role || 'student']
     );
 
-    // 4. Generate Token
+    const userId = result.insertId;
+
+    // 4. Create blank student profile if role is student
+    if ((role || 'student') === 'student') {
+      await db.query('INSERT INTO students (user_id) VALUES (?)', [userId]);
+    }
+
+    // 5. Generate Token
     const token = jwt.sign({ id: result.insertId, role: role || 'student' }, process.env.JWT_SECRET, {
       expiresIn: process.env.JWT_EXPIRE,
     });

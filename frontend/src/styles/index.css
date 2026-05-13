@@ -1,16 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-main: #0a0a0c;
+  --bg-card: rgba(20, 20, 25, 0.7);
+  --primary: #8b5cf6; /* Electric Violet */
+  --primary-glow: rgba(139, 92, 246, 0.3);
+  --secondary: #06b6d4; /* Cyan */
+  --accent: #f43f5e; /* Rose */
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary: #6366f1;
-  --secondary: #ec4899;
+@layer base {
+  body {
+    @apply bg-[#0a0a0c] text-slate-50 font-['Outfit',sans-serif] antialiased;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.1) 0px, transparent 50%);
+  }
 }
 
-body {
-  @apply bg-slate-900 text-slate-100 font-sans;
+@layer components {
+  .glass-card {
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+  }
+
+  .btn-primary {
+    @apply bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-semibold 
+           transition-all duration-300 shadow-lg shadow-indigo-600/20 active:scale-95;
+  }
+
+  .input-field {
+    @apply bg-white/[0.05] border border-white/10 rounded-xl p-3 text-white 
+           focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all;
+  }
 }
 
-.glass-card {
-  @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl;
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0a0c;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
 }

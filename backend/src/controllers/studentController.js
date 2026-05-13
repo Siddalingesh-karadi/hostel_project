@@ -41,48 +41,69 @@ const bcrypt = require('bcryptjs');
 // @desc    Create student user and profile
 // @route   POST /api/students
 exports.createStudent = async (req, res, next) => {
-  const { name, email, password, course, branch, year, phone, blood_group, address } = req.body;
+  const { 
+    name, email, course, branch, year, phone, blood_group, address,
+    parent_name, parent_phone, aadhar_number, age, permanent_address
+  } = req.body;
   
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
 
     // 1. Create User Account
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password || 'student123', salt);
-
+    const hashedPassword = await bcrypt.hash('student123', 10);
     const [userResult] = await conn.query(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, "student")',
-      [name, email, hashedPassword]
+      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+      [name, email, hashedPassword, 'student']
     );
 
     const userId = userResult.insertId;
 
+    // Generate student_number (e.g., STU + year + ID)
+    const student_number = `STU${year}${userId.toString().padStart(4, '0')}`;
+
     // 2. Create Student Profile
     await conn.query(
-      'INSERT INTO students (user_id, course, branch, year, phone, blood_group, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, course, branch, year, phone, blood_group, address]
+      `INSERT INTO students (
+        user_id, course, branch, year, phone, blood_group, address, 
+        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId, course, branch, year, phone, blood_group, address,
+        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address
+      ]
     );
 
     await conn.commit();
-    res.status(201).json({ success: true, message: 'Student created successfully' });
+    res.status(201).json({ success: true, message: 'Student registered successfully' });
   } catch (error) {
-    await conn.rollback();
+    if (conn) await conn.rollback();
     next(error);
   } finally {
-    conn.release();
+    if (conn) conn.release();
   }
 };
 
 // @desc    Update student profile
 // @route   PUT /api/students/:id
 exports.updateStudent = async (req, res, next) => {
-  const { course, branch, year, phone, blood_group, address } = req.body;
+  const { 
+    name, course, branch, year, phone, blood_group, address,
+    parent_name, parent_phone, aadhar_number, age, student_number, permanent_address
+  } = req.body;
 
   try {
     const [result] = await db.query(
-      'UPDATE students SET course=?, branch=?, year=?, phone=?, blood_group=?, address=? WHERE student_id=?',
-      [course, branch, year, phone, blood_group, address, req.params.id]
+      `UPDATE students s
+       JOIN users u ON s.user_id = u.id
+       SET u.name = ?, s.course = ?, s.branch = ?, s.year = ?, s.phone = ?, s.blood_group = ?, s.address = ?,
+           s.parent_name = ?, s.parent_phone = ?, s.aadhar_number = ?, s.age = ?, s.student_number = ?, s.permanent_address = ?
+       WHERE s.student_id = ?`,
+      [
+        name, course, branch, year, phone, blood_group, address,
+        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address,
+        req.params.id
+      ]
     );
 
     if (result.affectedRows === 0) {
@@ -112,6 +133,29 @@ exports.deleteStudent = async (req, res, next) => {
     await db.query('DELETE FROM users WHERE id = ?', [userId]);
 
     res.json({ success: true, message: 'Student and account removed successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get current student profile
+// @route   GET /api/students/me
+exports.getMyProfile = async (req, res, next) => {
+  try {
+    const [student] = await db.query(
+      `SELECT s.*, u.name, u.email, r.room_number, r.block 
+       FROM students s 
+       JOIN users u ON s.user_id = u.id 
+       LEFT JOIN rooms r ON s.room_id = r.room_id 
+       WHERE s.user_id = ?`,
+      [req.user.id]
+    );
+
+    if (student.length === 0) {
+      return res.status(404).json({ success: false, message: 'Profile not found' });
+    }
+
+    res.json({ success: true, data: student[0] });
   } catch (error) {
     next(error);
   }

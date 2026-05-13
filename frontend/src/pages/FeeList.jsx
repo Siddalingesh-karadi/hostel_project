@@ -1,224 +1,209 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { HiCurrencyDollar, HiCheckCircle, HiExclamationCircle, HiCalendar } from 'react-icons/hi';
+import { HiCurrencyDollar, HiCheckCircle, HiExclamationCircle, HiCalendar, HiPlus } from 'react-icons/hi';
 
 const FeeList = () => {
   const [fees, setFees] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
-    student_id: '', amount: '', due_date: ''
-  });
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [selectedFee, setSelectedFee] = useState(null);
   
+  const [formData, setFormData] = useState({ student_id: '', amount: '', due_date: '' });
+  const [payAmount, setPayAmount] = useState('');
+  
+  const TOTAL_HOSTEL_FEE = 67000;
   const user = JSON.parse(localStorage.getItem('user'));
 
-  const fetchFees = async () => {
+  const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
       const endpoint = user.role === 'student' ? '/api/fees/my' : '/api/fees';
-      const response = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setFees(response.data.data);
+      const [feesRes, studentsRes] = await Promise.all([
+        axios.get(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
+        user.role === 'admin' ? axios.get('/api/students', { headers: { Authorization: `Bearer ${token}` } }) : Promise.resolve({ data: { data: [] } })
+      ]);
+      setFees(feesRes.data.data);
+      setStudents(studentsRes.data.data);
     } catch (err) {
-      console.error('Failed to fetch fee records');
+      console.error('Failed to fetch fee data');
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchStudents = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get('/api/students', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setStudents(response.data.data);
-    } catch (err) {
-      console.error('Failed to fetch students');
-    }
-  };
-
-  useEffect(() => {
-    fetchFees();
-    if (user.role === 'admin') fetchStudents();
-  }, [user.role]);
+  useEffect(() => { fetchData(); }, []);
 
   const handleGenerateInvoice = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('/api/fees', formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post('/api/fees', formData, { headers: { Authorization: `Bearer ${token}` } });
       setShowModal(false);
-      setFormData({ student_id: '', amount: '', due_date: '' });
-      fetchFees();
-    } catch (err) {
-      alert('Failed to generate invoice');
-    }
+      fetchData();
+    } catch (err) { alert('Failed to create invoice'); }
   };
 
-  const handleMarkAsPaid = async (id) => {
+  const handlePayment = async (e) => {
+    e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`/api/fees/${id}`, { status: 'paid' }, {
+      const newPaidAmount = parseFloat(selectedFee.paid_amount || 0) + parseFloat(payAmount);
+      await axios.put(`/api/fees/${selectedFee.fee_id}`, { paid_amount: newPaidAmount }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      fetchFees();
-    } catch (err) {
-      alert('Failed to update payment');
-    }
+      setShowPayModal(false);
+      setPayAmount('');
+      fetchData();
+    } catch (err) { alert('Payment failed'); }
   };
 
-  const totalDues = fees
-    .filter(f => f.status !== 'paid')
-    .reduce((acc, curr) => acc + parseFloat(curr.amount), 0);
+  const totalPaid = fees.reduce((acc, curr) => acc + parseFloat(curr.paid_amount || 0), 0);
+  const totalDues = fees.reduce((acc, curr) => acc + (parseFloat(curr.amount) - parseFloat(curr.paid_amount || 0)), 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 p-8">
+    <div className="p-8 bg-slate-950 min-h-screen text-slate-100">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+        <div className="flex justify-between items-center mb-10">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">
-              {user.role === 'student' ? 'My Fee Records' : 'Hostel Fee Management'}
-            </h1>
-            <p className="text-slate-400">View and manage all financial records</p>
+            <h1 className="text-3xl font-bold text-white mb-2 text-glow">Fee Management</h1>
+            <p className="text-slate-400">Total Hostel Fee Structure: ${TOTAL_HOSTEL_FEE.toLocaleString()}</p>
           </div>
           {user.role === 'admin' && (
-            <button 
-              onClick={() => setShowModal(true)}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-semibold transition-all"
-            >
-              Generate New Invoice
+            <button onClick={() => setShowModal(true)} className="btn-primary flex items-center gap-2">
+              <HiPlus /> New Invoice
             </button>
           )}
         </div>
 
-        {/* Generate Invoice Modal */}
-        {showModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-white/10 w-full max-w-md rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-white mb-6">Generate Invoice</h2>
-              <form onSubmit={handleGenerateInvoice} className="space-y-4">
-                <select 
-                  required 
-                  className="w-full bg-slate-800 border-none rounded-lg p-3 text-white"
-                  value={formData.student_id}
-                  onChange={(e) => setFormData({...formData, student_id: e.target.value})}
-                >
-                  <option value="">Select Student...</option>
-                  {students.map(s => (
-                    <option key={s.student_id} value={s.student_id}>{s.name} ({s.phone})</option>
-                  ))}
-                </select>
-                <input type="number" placeholder="Amount ($)" required className="w-full bg-slate-800 border-none rounded-lg p-3 text-white" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} />
-                <input type="date" required className="w-full bg-slate-800 border-none rounded-lg p-3 text-white" value={formData.due_date} onChange={(e) => setFormData({...formData, due_date: e.target.value})} />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <StatCard title="Total Paid" value={`$${totalPaid.toLocaleString()}`} icon={<HiCheckCircle />} color="text-emerald-400" />
+          <StatCard title="Total Dues" value={`$${totalDues.toLocaleString()}`} icon={<HiExclamationCircle />} color="text-rose-400" />
+          <StatCard title="Annual Balance" value={`$${(TOTAL_HOSTEL_FEE - totalPaid).toLocaleString()}`} icon={<HiCurrencyDollar />} color="text-indigo-400" />
+        </div>
+
+        <div className="glass-card overflow-hidden">
+          <table className="w-full text-left">
+            <thead className="bg-white/5 text-slate-400 text-xs uppercase font-bold tracking-widest">
+              <tr>
+                <th className="px-6 py-4">Student / Invoice</th>
+                <th className="px-6 py-4">Amount / Paid</th>
+                <th className="px-6 py-4">Balance</th>
+                <th className="px-6 py-4">Due Date</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {fees.map(fee => {
+                const balance = parseFloat(fee.amount) - parseFloat(fee.paid_amount || 0);
+                const isOverdue = new Date(fee.due_date) < new Date() && fee.status !== 'paid';
                 
-                <div className="flex gap-4 mt-6">
-                  <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-xl transition-all">Create Invoice</button>
-                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-3 rounded-xl transition-all">Cancel</button>
+                return (
+                  <tr key={fee.fee_id} className="hover:bg-white/[0.02]">
+                    <td className="px-6 py-4">
+                      <p className="font-bold text-white">{fee.name || 'Monthly Hostel Fee'}</p>
+                      <p className="text-[10px] text-slate-500 uppercase tracking-widest">INV #{fee.fee_id}</p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-sm font-medium text-white">${fee.amount}</p>
+                      <p className="text-xs text-emerald-500">Paid: ${fee.paid_amount || 0}</p>
+                    </td>
+                    <td className="px-6 py-4 font-bold text-rose-400">${balance.toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <div className={`flex items-center gap-2 text-xs font-bold ${isOverdue ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                        <HiCalendar />
+                        {new Date(fee.due_date).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
+                        fee.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                        fee.status === 'partial' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                        'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                      }`}>
+                        {fee.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {user.role === 'admin' && fee.status !== 'paid' && (
+                        <button 
+                          onClick={() => { setSelectedFee(fee); setShowPayModal(true); }}
+                          className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 py-2 rounded-lg text-xs font-black uppercase transition-all"
+                        >
+                          Record Payment
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Record Payment Modal */}
+        {showPayModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="glass-card w-full max-w-md p-8">
+              <h2 className="text-xl font-bold text-white mb-6">Record Payment</h2>
+              <div className="p-4 bg-white/5 rounded-xl mb-6">
+                <p className="text-xs text-slate-500 uppercase font-black mb-1">Total Outstanding Balance</p>
+                <p className="text-2xl font-black text-rose-400">${(selectedFee.amount - selectedFee.paid_amount).toLocaleString()}</p>
+              </div>
+              <form onSubmit={handlePayment} className="space-y-4">
+                <input 
+                  type="number" placeholder="Enter Amount Paid" required 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white"
+                  value={payAmount} onChange={(e) => setPayAmount(e.target.value)}
+                />
+                <div className="flex gap-4 pt-4">
+                  <button type="submit" className="flex-1 btn-primary">Confirm Payment</button>
+                  <button type="button" onClick={() => setShowPayModal(false)} className="flex-1 bg-white/5 text-slate-300 rounded-xl font-bold">Cancel</button>
                 </div>
               </form>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <div className="glass-card p-6 border-l-4 border-indigo-500">
-            <div className="flex items-center gap-4 text-slate-400 mb-2">
-              <HiCurrencyDollar className="text-2xl" />
-              <span className="text-sm font-semibold uppercase tracking-wider">Total {user.role === 'student' ? 'Pending' : 'Receivable'}</span>
+        {/* New Invoice Modal */}
+        {showModal && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="glass-card w-full max-w-md p-8">
+              <h2 className="text-xl font-bold text-white mb-6">Generate New Invoice</h2>
+              <form onSubmit={handleGenerateInvoice} className="space-y-4">
+                <select 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none"
+                  value={formData.student_id} onChange={(e) => setFormData({...formData, student_id: e.target.value})}
+                >
+                  <option value="">Select Student...</option>
+                  {students.map(s => <option key={s.student_id} value={s.student_id}>{s.name} ({s.student_number})</option>)}
+                </select>
+                <input type="number" placeholder="Invoice Amount" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})} />
+                <input type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" value={formData.due_date} onChange={(e) => setFormData({...formData, due_date: e.target.value})} />
+                <div className="flex gap-4 pt-4">
+                  <button type="submit" className="flex-1 btn-primary">Create Invoice</button>
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-white/5 text-slate-300 rounded-xl font-bold">Cancel</button>
+                </div>
+              </form>
             </div>
-            <h2 className="text-3xl font-bold text-white">${totalDues.toLocaleString()}</h2>
           </div>
-          
-          <div className="glass-card p-6 border-l-4 border-emerald-500">
-            <div className="flex items-center gap-4 text-slate-400 mb-2">
-              <HiCheckCircle className="text-2xl" />
-              <span className="text-sm font-semibold uppercase tracking-wider">Status Overview</span>
-            </div>
-            <h2 className="text-3xl font-bold text-white">
-              {fees.filter(f => f.status === 'paid').length} Paid
-            </h2>
-          </div>
-
-          <div className="glass-card p-6 border-l-4 border-amber-500">
-            <div className="flex items-center gap-4 text-slate-400 mb-2">
-              <HiExclamationCircle className="text-2xl" />
-              <span className="text-sm font-semibold uppercase tracking-wider">Unpaid Records</span>
-            </div>
-            <h2 className="text-3xl font-bold text-white">
-              {fees.filter(f => f.status === 'unpaid').length} Outstanding
-            </h2>
-          </div>
-        </div>
-
-        <div className="glass-card overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-white/5 text-slate-300 text-sm uppercase tracking-wider">
-                <th className="px-6 py-4 font-semibold">Student</th>
-                <th className="px-6 py-4 font-semibold">Amount</th>
-                <th className="px-6 py-4 font-semibold">Due Date</th>
-                <th className="px-6 py-4 font-semibold">Status</th>
-                <th className="px-6 py-4 font-semibold text-right">Payment Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 text-slate-300">
-              {loading ? (
-                <tr><td colSpan="5" className="px-6 py-10 text-center">Loading records...</td></tr>
-              ) : fees.length === 0 ? (
-                <tr><td colSpan="5" className="px-6 py-10 text-center">No fee records found</td></tr>
-              ) : fees.map((fee) => (
-                <tr key={fee.fee_id} className="hover:bg-white/5 transition-colors">
-                  <td className="px-6 py-4">
-                    {user.role === 'admin' ? (
-                      <div>
-                        <p className="text-white font-medium">{fee.name}</p>
-                        <p className="text-xs text-slate-500">{fee.phone}</p>
-                      </div>
-                    ) : (
-                      <p className="text-white font-medium">Hostel Monthly Fee</p>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 font-bold text-white">${fee.amount}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <HiCalendar className="text-slate-500" />
-                      {new Date(fee.due_date).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                        fee.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                        'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                      }`}>
-                        {fee.status}
-                      </span>
-                      {user.role === 'admin' && fee.status !== 'paid' && (
-                        <button 
-                          onClick={() => handleMarkAsPaid(fee.fee_id)}
-                          className="text-xs font-bold text-emerald-500 hover:underline"
-                        >
-                          Mark as Paid
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-right text-sm text-slate-500">
-                    {fee.payment_date ? new Date(fee.payment_date).toLocaleDateString() : '--'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        )}
       </div>
     </div>
   );
 };
+
+const StatCard = ({ title, value, icon, color }) => (
+  <div className="glass-card p-6 flex items-center gap-6">
+    <div className={`p-4 rounded-2xl bg-white/5 ${color} text-2xl`}>{icon}</div>
+    <div>
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">{title}</p>
+      <p className="text-2xl font-black text-white">{value}</p>
+    </div>
+  </div>
+);
 
 export default FeeList;
