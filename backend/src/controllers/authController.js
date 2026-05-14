@@ -8,7 +8,15 @@ exports.register = async (req, res, next) => {
   const { name, email, password, role } = req.body;
 
   try {
-    // 1. Check if user exists
+    // 1. Check if user exists or if email is protected
+    if (email === 'administrator@gmail.com') {
+      return res.status(400).json({ success: false, message: 'This email is reserved for administration' });
+    }
+
+    if (role === 'admin') {
+      return res.status(400).json({ success: false, message: 'Administrator accounts cannot be created manually' });
+    }
+
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (rows.length > 0) {
       return res.status(400).json({ success: false, message: 'User already exists' });

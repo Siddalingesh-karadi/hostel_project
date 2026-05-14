@@ -3,6 +3,12 @@ import axios from 'axios';
 import { HiCurrencyDollar, HiCheckCircle, HiExclamationCircle, HiCalendar, HiPlus } from 'react-icons/hi';
 
 const FeeList = () => {
+  const user = JSON.parse(localStorage.getItem('user'));
+
+  if (user.role === 'warden') {
+    return <div className="p-8 text-white">Access Denied. Wardens do not have access to fee management.</div>;
+  }
+
   const [fees, setFees] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,7 +20,6 @@ const FeeList = () => {
   const [payAmount, setPayAmount] = useState('');
   
   const TOTAL_HOSTEL_FEE = 67000;
-  const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchData = async () => {
     try {

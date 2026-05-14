@@ -2,7 +2,8 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   HiHome, HiUserGroup, HiOfficeBuilding, HiExclamation, 
-  HiCurrencyDollar, HiLogout, HiClipboardList 
+  HiCurrencyDollar, HiLogout, HiClipboardList, 
+  HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup 
 } from 'react-icons/hi';
 
 const Sidebar = () => {
@@ -18,6 +19,10 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student'] },
     { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student', 'admin', 'warden'] },
+    { name: 'Notices', path: '/notices', icon: <HiOutlineSpeakerphone />, roles: ['admin', 'warden', 'student'] },
+    { name: 'Mess Menu', path: '/mess-menu', icon: <HiOutlineCalendar />, roles: ['admin', 'warden', 'student'] },
+    { name: 'Inventory', path: '/inventory', icon: <HiOutlineCube />, roles: ['admin'] },
+    { name: 'Community', path: '/staff', icon: <HiOutlineUserGroup />, roles: ['admin'] },
     { name: 'Students', path: '/students', icon: <HiUserGroup />, roles: ['admin', 'warden'] },
     { name: 'Rooms', path: '/rooms', icon: <HiOfficeBuilding />, roles: ['admin', 'warden'] },
     { name: 'Complaints', path: '/complaints', icon: <HiExclamation />, roles: ['admin', 'student', 'warden'] },

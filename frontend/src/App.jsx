@@ -16,6 +16,10 @@ import RoomList from './pages/RoomList';
 import ComplaintList from './pages/ComplaintList';
 import FeeList from './pages/FeeList';
 import LeaveList from './pages/LeaveList';
+import Notices from './pages/Notices';
+import Inventory from './pages/Inventory';
+import MessMenu from './pages/MessMenu';
+import StaffList from './pages/StaffList';
 
 const App = () => {
   return (
@@ -32,6 +36,10 @@ const App = () => {
         <Route path="/complaints" element={<ProtectedRoute><Layout><ComplaintList /></Layout></ProtectedRoute>} />
         <Route path="/fees" element={<ProtectedRoute><Layout><FeeList /></Layout></ProtectedRoute>} />
         <Route path="/leaves" element={<ProtectedRoute><Layout><LeaveList /></Layout></ProtectedRoute>} />
+        <Route path="/notices" element={<ProtectedRoute><Layout><Notices /></Layout></ProtectedRoute>} />
+        <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
+        <Route path="/mess-menu" element={<ProtectedRoute><Layout><MessMenu /></Layout></ProtectedRoute>} />
+        <Route path="/staff" element={<ProtectedRoute><Layout><StaffList /></Layout></ProtectedRoute>} />
       </Routes>
     </Router>
   );

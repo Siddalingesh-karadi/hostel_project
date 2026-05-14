@@ -20,6 +20,11 @@ const complaintRoutes = require('./routes/complaintRoutes');
 const feeRoutes = require('./routes/feeRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const noticeRoutes = require('./routes/noticeRoutes');
+const inventoryRoutes = require('./routes/inventoryRoutes');
+const messMenuRoutes = require('./routes/messMenuRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const broadcastRoutes = require('./routes/broadcastRoutes');
 
 // Routes
 app.get('/', (req, res) => {
@@ -37,6 +42,11 @@ app.use('/api/complaints', complaintRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/notices', noticeRoutes);
+app.use('/api/inventory', inventoryRoutes);
+app.use('/api/mess-menu', messMenuRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/broadcasts', broadcastRoutes);
 
 // Simple Error Handling
 app.use((err, req, res, next) => {
