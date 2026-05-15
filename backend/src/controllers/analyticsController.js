@@ -16,15 +16,29 @@ exports.getStats = async (req, res, next) => {
     // 4. Unpaid Fees
     const [fees] = await db.query('SELECT SUM(amount) as total FROM fees WHERE status = "unpaid"');
 
+    // 5. Total Rooms
+    const [totalRooms] = await db.query('SELECT COUNT(*) as count FROM rooms');
+
+    // 6. Active Security Locations
+    const [securityLocations] = await db.query(`
+      SELECT u.name, a.location 
+      FROM security_assignments a
+      JOIN users u ON a.security_id = u.id
+      WHERE a.assigned_date = CURDATE()
+    `);
+
     res.json({
       success: true,
       data: {
         totalStudents: students[0].count,
         occupancy: `${rooms[0].occupied || 0}/${rooms[0].capacity || 0}`,
         pendingComplaints: complaints[0].count,
-        unpaidFees: fees[0].total || 0
+        unpaidFees: fees[0].total || 0,
+        totalRooms: totalRooms[0].count,
+        securityLocations: securityLocations
       }
     });
+
   } catch (error) {
     next(error);
   }

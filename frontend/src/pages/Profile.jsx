@@ -37,8 +37,9 @@ const Profile = () => {
             <h1 className="text-4xl font-black text-white mb-2">{profile.name}</h1>
             <div className="flex gap-3">
               <span className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold border border-indigo-500/20 uppercase tracking-widest">
-                {profile.student_number || 'STU-PENDING'}
+                {profile.usn || profile.student_number || 'STU-PENDING'}
               </span>
+
               <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/20 uppercase tracking-widest">
                 Active Student
               </span>
@@ -85,7 +86,10 @@ const Profile = () => {
               <div className="space-y-4">
                 <InfoItem label="Course" value={profile.course} />
                 <InfoItem label="Branch" value={profile.branch} />
+                <InfoItem label="Semester" value={`${profile.semester} Sem`} />
+                <InfoItem label="USN" value={profile.usn} />
                 <InfoItem label="Current Year" value={`${profile.year} Year`} />
+
               </div>
             </div>
 

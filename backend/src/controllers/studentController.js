@@ -43,8 +43,10 @@ const bcrypt = require('bcryptjs');
 exports.createStudent = async (req, res, next) => {
   const { 
     name, email, course, branch, year, phone, blood_group, address,
-    parent_name, parent_phone, aadhar_number, age, permanent_address
+    parent_name, parent_phone, aadhar_number, age, permanent_address,
+    usn, semester
   } = req.body;
+
   
   const conn = await db.getConnection();
   try {
@@ -66,13 +68,16 @@ exports.createStudent = async (req, res, next) => {
     await conn.query(
       `INSERT INTO students (
         user_id, course, branch, year, phone, blood_group, address, 
-        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address,
+        usn, semester
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId, course, branch, year, phone, blood_group, address,
-        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address
+        parent_name, parent_phone, aadhar_number, age, student_number, permanent_address,
+        usn, semester
       ]
     );
+
 
     await conn.commit();
     res.status(201).json({ success: true, message: 'Student registered successfully' });
@@ -89,22 +94,28 @@ exports.createStudent = async (req, res, next) => {
 exports.updateStudent = async (req, res, next) => {
   const { 
     name, course, branch, year, phone, blood_group, address,
-    parent_name, parent_phone, aadhar_number, age, student_number, permanent_address
+    parent_name, parent_phone, aadhar_number, age, student_number, permanent_address,
+    usn, semester
   } = req.body;
+
 
   try {
     const [result] = await db.query(
       `UPDATE students s
        JOIN users u ON s.user_id = u.id
        SET u.name = ?, s.course = ?, s.branch = ?, s.year = ?, s.phone = ?, s.blood_group = ?, s.address = ?,
-           s.parent_name = ?, s.parent_phone = ?, s.aadhar_number = ?, s.age = ?, s.student_number = ?, s.permanent_address = ?
+           s.parent_name = ?, s.parent_phone = ?, s.aadhar_number = ?, s.age = ?, s.student_number = ?, s.permanent_address = ?,
+           s.usn = ?, s.semester = ?
        WHERE s.student_id = ?`,
+
       [
         name, course, branch, year, phone, blood_group, address,
         parent_name, parent_phone, aadhar_number, age, student_number, permanent_address,
+        usn, semester,
         req.params.id
       ]
     );
+
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ success: false, message: 'Student not found' });

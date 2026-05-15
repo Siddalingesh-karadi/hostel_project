@@ -5,11 +5,13 @@ const { db } = require('../config/db');
 exports.getAllFees = async (req, res, next) => {
   try {
     const [fees] = await db.query(`
-      SELECT f.*, s.name, s.phone, s.student_number 
+      SELECT f.*, u.name, s.phone, s.student_number 
       FROM fees f
       JOIN students s ON f.student_id = s.student_id
+      JOIN users u ON s.user_id = u.id
       ORDER BY f.due_date DESC
     `);
+
     res.json({ success: true, data: fees });
   } catch (error) {
     next(error);

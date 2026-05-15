@@ -14,6 +14,17 @@ const Dashboard = () => {
   const [broadcasts, setBroadcasts] = useState([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [profile, setProfile] = useState(null);
+  const [roommates, setRoommates] = useState([]);
+  const [showRoommatesModal, setShowRoommatesModal] = useState(false);
+  const [feeStatus, setFeeStatus] = useState({ status: 'Pending', color: 'text-amber-400' });
+  const [leaveStatus, setLeaveStatus] = useState('At Hostel');
+  const [showFeeModal, setShowFeeModal] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [myFeeDetails, setMyFeeDetails] = useState(null);
+  const [myLeaveDetails, setMyLeaveDetails] = useState(null);
+
+
 
   const user = JSON.parse(localStorage.getItem('user'));
   const navigate = useNavigate();
@@ -45,8 +56,47 @@ const Dashboard = () => {
         }
       };
       fetchStats();
+    } else if (user.role === 'student') {
+      const fetchStudentData = async () => {
+        try {
+          const token = localStorage.getItem('token');
+          const headers = { Authorization: `Bearer ${token}` };
+          
+          // Fetch Profile (for Room info)
+          const profRes = await axios.get('/api/students/me', { headers });
+          setProfile(profRes.data.data);
+
+          // Fetch Roommates
+          const roomRes = await axios.get('/api/rooms/my-roommates', { headers });
+          setRoommates(roomRes.data.data);
+
+          // Fetch Fee Status
+          const feeRes = await axios.get('/api/fees/my', { headers });
+          const fees = feeRes.data.data;
+          if (fees.length > 0) {
+            const latestFee = fees[0];
+            setMyFeeDetails(latestFee);
+            if (latestFee.status === 'paid') {
+              setFeeStatus({ status: 'Paid', color: 'text-emerald-400' });
+            } else {
+              setFeeStatus({ status: 'Pending', color: 'text-amber-400' });
+            }
+          }
+
+          // Fetch Leave Status
+          const leaveRes = await axios.get('/api/leaves/my', { headers });
+          const activeLeave = leaveRes.data.data.find(l => l.status === 'approved');
+          setMyLeaveDetails(activeLeave || leaveRes.data.data[0]);
+          if (activeLeave) setLeaveStatus('On Leave');
+
+        } catch (err) {
+          console.error('Failed to fetch student data');
+        }
+      };
+      fetchStudentData();
     }
   }, [user.role]);
+
 
   const handleSendBroadcast = async (e) => {
     e.preventDefault();
@@ -94,15 +144,36 @@ const Dashboard = () => {
 
         <h1 className="text-3xl font-bold text-white mb-2 text-glow">Hostel Overview</h1>
         <p className="text-slate-400 mb-10">Welcome back, {user.name}. Here is what's happening today.</p>
-
         <div className={`grid grid-cols-1 md:grid-cols-2 ${user.role === 'admin' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
           <StatCard title="Total Students" value={stats.totalStudents} icon={<HiUserGroup />} color="bg-indigo-500" onClick={() => navigate('/students')} />
+          <StatCard title="Total Rooms" value={stats.totalRooms || 0} icon={<HiOfficeBuilding />} color="bg-cyan-500" onClick={() => navigate('/rooms')} />
+
           <StatCard title="Occupancy" value={stats.occupancy} icon={<HiOfficeBuilding />} color="bg-emerald-500" onClick={() => navigate('/rooms')} />
           <StatCard title="Pending" value={stats.pendingComplaints} icon={<HiExclamation />} color="bg-rose-500" onClick={() => navigate('/complaints')} />
           {user.role === 'admin' && (
             <StatCard title="Unpaid Fees" value={`$${stats.unpaidFees}`} icon={<HiCurrencyDollar />} color="bg-amber-500" onClick={() => navigate('/fees')} />
           )}
         </div>
+
+        {/* Security Deployment Map (Text Based) */}
+        {user.role === 'admin' && (
+          <div className="mt-10 glass-card p-8">
+            <h3 className="text-white font-bold mb-6 flex items-center gap-2">
+              <HiShieldCheck className="text-emerald-500" /> Active Security Deployment
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.securityLocations?.length > 0 ? stats.securityLocations.map((loc, i) => (
+                <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-indigo-400 font-black text-[10px] uppercase tracking-widest mb-1">{loc.location}</p>
+                  <p className="text-white font-bold text-sm">{loc.name}</p>
+                </div>
+              )) : (
+                <p className="text-slate-500 italic col-span-full">No security personnel assigned for today.</p>
+              )}
+            </div>
+          </div>
+        )}
+
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <FeatureCard title="Hostel Notices" subtitle="Announcements" icon={<HiOutlineSpeakerphone />} onClick={() => navigate('/notices')} color="border-indigo-500" />
@@ -163,22 +234,133 @@ const Dashboard = () => {
       <p className="text-slate-400 mb-10">Your hostel portal and personal details.</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="glass-card p-8 border-t-4 border-indigo-500">
+        <div 
+          onClick={() => setShowRoommatesModal(true)}
+          className="glass-card p-8 border-t-4 border-indigo-500 cursor-pointer hover:bg-white/5 transition-all"
+        >
           <h3 className="text-slate-400 uppercase text-xs font-black tracking-widest mb-4">Your Room</h3>
-          <p className="text-3xl font-bold text-white">Block A - 204</p>
-          <p className="text-slate-500 text-sm mt-2">Shared with 2 others</p>
+          <p className="text-3xl font-bold text-white">
+            {profile?.room_number ? `${profile.block} - ${profile.room_number}` : 'Not Allocated'}
+          </p>
+          <p className="text-slate-500 text-sm mt-2">
+            {roommates.length > 0 ? `Shared with ${roommates.length} others` : 'Single Occupancy / Not assigned'}
+          </p>
         </div>
-        <div className="glass-card p-8 border-t-4 border-emerald-500">
+        <div 
+          onClick={() => setShowFeeModal(true)}
+          className="glass-card p-8 border-t-4 border-emerald-500 cursor-pointer hover:bg-white/5 transition-all"
+        >
           <h3 className="text-slate-400 uppercase text-xs font-black tracking-widest mb-4">Fee Status</h3>
-          <p className="text-3xl font-bold text-emerald-400">Paid</p>
-          <p className="text-slate-500 text-sm mt-2">No outstanding dues</p>
+          <p className={`text-3xl font-bold ${feeStatus.color}`}>{feeStatus.status}</p>
+          <p className="text-slate-500 text-sm mt-2">
+            {feeStatus.status === 'Paid' ? 'No outstanding dues' : 'View balance details'}
+          </p>
         </div>
-        <div className="glass-card p-8 border-t-4 border-amber-500">
+        <div 
+          onClick={() => setShowLeaveModal(true)}
+          className="glass-card p-8 border-t-4 border-amber-500 cursor-pointer hover:bg-white/5 transition-all"
+        >
           <h3 className="text-slate-400 uppercase text-xs font-black tracking-widest mb-4">Leave Status</h3>
-          <p className="text-3xl font-bold text-white">At Hostel</p>
-          <p className="text-slate-500 text-sm mt-2">No active leave requests</p>
+          <p className="text-3xl font-bold text-white">{leaveStatus}</p>
+          <p className="text-slate-500 text-sm mt-2">Check absence details</p>
         </div>
+
       </div>
+
+      {/* Roommates Modal */}
+      {showRoommatesModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-lg p-8 border-indigo-500/30 border-2">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <HiOutlineUserGroup className="text-indigo-500" /> Roommates Details
+            </h2>
+            <div className="space-y-4">
+              {roommates.length > 0 ? roommates.map((mate, idx) => (
+                <div key={mate.student_id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-white font-bold">{mate.name}</p>
+                  <p className="text-slate-400 text-sm">{mate.branch} - {mate.course}</p>
+                  <p className="text-slate-500 text-xs mt-1">📞 {mate.phone}</p>
+                </div>
+              )) : (
+                <p className="text-slate-400 italic">No roommates found for this room.</p>
+              )}
+            </div>
+            <button 
+              onClick={() => setShowRoommatesModal(false)}
+              className="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold p-3 rounded-xl transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Fee Details Modal */}
+      {showFeeModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md p-8 border-emerald-500/30 border-2">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <HiCurrencyDollar className="text-emerald-500" /> Fee Details
+            </h2>
+            {myFeeDetails ? (
+              <div className="space-y-6">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-xs text-slate-500 uppercase font-black mb-1">Status</p>
+                  <p className={`text-xl font-bold ${myFeeDetails.status === 'paid' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {myFeeDetails.status.toUpperCase()}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <p className="text-xs text-slate-500 uppercase font-black mb-1">Paid On</p>
+                    <p className="text-white font-bold">{myFeeDetails.payment_date ? new Date(myFeeDetails.payment_date).toLocaleDateString() : 'N/A'}</p>
+                  </div>
+                  <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <p className="text-xs text-slate-500 uppercase font-black mb-1">Balance</p>
+                    <p className="text-rose-400 font-bold">${(myFeeDetails.amount - (myFeeDetails.paid_amount || 0)).toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <p className="text-slate-400 italic">No fee records found.</p>
+            )}
+            <button onClick={() => setShowFeeModal(false)} className="mt-8 w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold p-3 rounded-xl transition-all">Close</button>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Details Modal */}
+      {showLeaveModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md p-8 border-amber-500/30 border-2">
+            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+              <HiOutlineCalendar className="text-amber-500" /> Absence Details
+            </h2>
+            {myLeaveDetails ? (
+              <div className="space-y-6">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
+                  <p className="text-xs text-slate-500 uppercase font-black mb-1">Total Days Absent</p>
+                  <p className="text-4xl font-black text-white">
+                    {Math.ceil((new Date(myLeaveDetails.to_date) - new Date(myLeaveDetails.from_date)) / (1000 * 60 * 60 * 24)) + 1} Days
+                  </p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <p className="text-xs text-slate-500 uppercase font-black mb-1">Leave Period</p>
+                  <p className="text-white font-bold">
+                    {new Date(myLeaveDetails.from_date).toLocaleDateString()} - {new Date(myLeaveDetails.to_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                  <p className="text-[10px] text-emerald-400 font-black uppercase">Current Status: {myLeaveDetails.status}</p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-slate-400 italic">No leave records found.</p>
+            )}
+            <button onClick={() => setShowLeaveModal(false)} className="mt-8 w-full bg-amber-600 hover:bg-amber-500 text-white font-bold p-3 rounded-xl transition-all">Close</button>
+          </div>
+        </div>
+      )}
+
 
       <h3 className="text-white font-bold mb-6">Quick Actions</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

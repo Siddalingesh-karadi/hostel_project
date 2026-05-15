@@ -25,6 +25,10 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const messMenuRoutes = require('./routes/messMenuRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const broadcastRoutes = require('./routes/broadcastRoutes');
+const housekeeperRoutes = require('./routes/housekeeperRoutes');
+const securityRoutes = require('./routes/securityRoutes');
+const messageRoutes = require('./routes/messageRoutes');
+
 
 // Routes
 app.get('/', (req, res) => {
@@ -47,6 +51,10 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/mess-menu', messMenuRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/broadcasts', broadcastRoutes);
+app.use('/api/housekeeper', housekeeperRoutes);
+app.use('/api/security', securityRoutes);
+app.use('/api/messages', messageRoutes);
+
 
 // Simple Error Handling
 app.use((err, req, res, next) => {

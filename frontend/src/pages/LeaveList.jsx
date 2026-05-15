@@ -7,8 +7,9 @@ const LeaveList = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    start_date: '', end_date: '', reason: ''
+    from_date: '', to_date: '', reason: ''
   });
+
   
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -45,10 +46,17 @@ const LeaveList = () => {
     e.preventDefault();
     
     // Date Validation
-    const days = calculateDays(formData.start_date, formData.end_date);
+    const days = calculateDays(formData.from_date, formData.to_date);
     if (days <= 0) {
       return alert('End Date must be after Start Date');
     }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(formData.from_date) < today) {
+      return alert('Leave cannot be applied for previous days');
+    }
+
 
     try {
       const token = localStorage.getItem('token');
@@ -56,8 +64,9 @@ const LeaveList = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowModal(false);
-      setFormData({ start_date: '', end_date: '', reason: '' });
+      setFormData({ from_date: '', to_date: '', reason: '' });
       fetchLeaves();
+
     } catch (err) {
       alert('Failed to apply for leave');
     }
@@ -112,11 +121,12 @@ const LeaveList = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-sm text-indigo-400 font-bold mb-1">
                       <HiCalendar />
-                      {calculateDays(leave.start_date, leave.end_date)} Days
+                      {calculateDays(leave.from_date, leave.to_date)} Days
                     </div>
                     <p className="text-[10px] text-slate-500">
-                      {new Date(leave.start_date).toLocaleDateString()} - {new Date(leave.end_date).toLocaleDateString()}
+                      {new Date(leave.from_date).toLocaleDateString()} - {new Date(leave.to_date).toLocaleDateString()}
                     </p>
+
                   </td>
                   <td className="px-6 py-4 text-sm text-slate-400 italic">"{leave.reason}"</td>
                   <td className="px-6 py-4">
@@ -153,18 +163,19 @@ const LeaveList = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-[10px] font-black uppercase text-slate-500 mb-2 block">Start Date</label>
-                    <input type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" value={formData.start_date} onChange={(e) => setFormData({...formData, start_date: e.target.value})} />
+                    <input type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" value={formData.from_date} onChange={(e) => setFormData({...formData, from_date: e.target.value})} />
                   </div>
                   <div>
                     <label className="text-[10px] font-black uppercase text-slate-500 mb-2 block">End Date</label>
-                    <input type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" value={formData.end_date} onChange={(e) => setFormData({...formData, end_date: e.target.value})} />
+                    <input type="date" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white" value={formData.to_date} onChange={(e) => setFormData({...formData, to_date: e.target.value})} />
                   </div>
                 </div>
                 
                 <div className="p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 flex justify-between items-center">
                   <span className="text-xs font-bold text-indigo-400 uppercase tracking-widest">Total Duration</span>
-                  <span className="text-xl font-black text-white">{calculateDays(formData.start_date, formData.end_date)} Days</span>
+                  <span className="text-xl font-black text-white">{calculateDays(formData.from_date, formData.to_date)} Days</span>
                 </div>
+
 
                 <div>
                   <label className="text-[10px] font-black uppercase text-slate-500 mb-2 block">Reason for Leave</label>

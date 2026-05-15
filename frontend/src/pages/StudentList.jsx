@@ -11,8 +11,10 @@ const StudentList = () => {
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [formData, setFormData] = useState({
     name: '', email: '', course: '', branch: '', year: '', phone: '', blood_group: '', address: '',
-    parent_name: '', parent_phone: '', aadhar_number: '', age: '', permanent_address: ''
+    parent_name: '', parent_phone: '', aadhar_number: '', age: '', permanent_address: '',
+    usn: '', semester: ''
   });
+
 
   const user = JSON.parse(localStorage.getItem('user'));
 
@@ -48,8 +50,11 @@ const StudentList = () => {
       parent_phone: student.parent_phone || '',
       aadhar_number: student.aadhar_number || '',
       age: student.age || '',
-      permanent_address: student.permanent_address || ''
+      permanent_address: student.permanent_address || '',
+      usn: student.usn || '',
+      semester: student.semester || ''
     });
+
     setSelectedStudentId(student.student_id);
     setIsEditing(true);
     setShowModal(true);
@@ -58,8 +63,10 @@ const StudentList = () => {
   const handleOpenAdd = () => {
     setFormData({ 
       name: '', email: '', course: '', branch: '', year: '', phone: '', blood_group: '', address: '',
-      parent_name: '', parent_phone: '', aadhar_number: '', age: '', permanent_address: ''
+      parent_name: '', parent_phone: '', aadhar_number: '', age: '', permanent_address: '',
+      usn: '', semester: ''
     });
+
     setIsEditing(false);
     setShowModal(true);
   };
@@ -140,7 +147,10 @@ const StudentList = () => {
                   <FormInput label="Year" value={formData.year} onChange={(v) => setFormData({...formData, year: v})} type="number" />
                   <FormInput label="Parent Name" value={formData.parent_name} onChange={(v) => setFormData({...formData, parent_name: v})} />
                   <FormInput label="Parent Phone" value={formData.parent_phone} onChange={(v) => setFormData({...formData, parent_phone: v})} />
+                  <FormInput label="USN" value={formData.usn} onChange={(v) => setFormData({...formData, usn: v})} />
+                  <FormInput label="Semester" value={formData.semester} onChange={(v) => setFormData({...formData, semester: v})} type="number" />
                 </div>
+
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormTextArea label="Local Address" value={formData.address} onChange={(v) => setFormData({...formData, address: v})} />

@@ -20,6 +20,12 @@ import Notices from './pages/Notices';
 import Inventory from './pages/Inventory';
 import MessMenu from './pages/MessMenu';
 import StaffList from './pages/StaffList';
+import HousekeeperDashboard from './pages/HousekeeperDashboard';
+import SecurityDashboard from './pages/SecurityDashboard';
+import AdminMessages from './pages/AdminMessages';
+import SecurityAlerts from './pages/SecurityAlerts';
+import StudentSupport from './pages/StudentSupport';
+
 
 const App = () => {
   return (
@@ -40,6 +46,12 @@ const App = () => {
         <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
         <Route path="/mess-menu" element={<ProtectedRoute><Layout><MessMenu /></Layout></ProtectedRoute>} />
         <Route path="/staff" element={<ProtectedRoute><Layout><StaffList /></Layout></ProtectedRoute>} />
+        <Route path="/housekeeper" element={<ProtectedRoute><Layout><HousekeeperDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/security" element={<ProtectedRoute><Layout><SecurityDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/admin-messages" element={<ProtectedRoute><Layout><AdminMessages /></Layout></ProtectedRoute>} />
+        <Route path="/security-alerts" element={<ProtectedRoute><Layout><SecurityAlerts /></Layout></ProtectedRoute>} />
+        <Route path="/student-support" element={<ProtectedRoute><Layout><StudentSupport /></Layout></ProtectedRoute>} />
+
       </Routes>
     </Router>
   );

@@ -13,9 +13,10 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'This email is reserved for administration' });
     }
 
-    if (role === 'admin') {
-      return res.status(400).json({ success: false, message: 'Administrator accounts cannot be created manually' });
+    if (role && role !== 'student') {
+      return res.status(400).json({ success: false, message: 'Only student accounts can be registered publicly. Other roles must be created by an Administrator.' });
     }
+
 
     const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
     if (rows.length > 0) {

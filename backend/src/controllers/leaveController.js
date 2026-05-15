@@ -42,10 +42,24 @@ exports.applyLeave = async (req, res, next) => {
     const [students] = await db.query('SELECT student_id FROM students WHERE user_id = ?', [req.user.id]);
     if (students.length === 0) return res.status(404).json({ success: false, message: 'Student profile not found' });
 
+    // Date validation: Allow only for valid dates (today or future)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const leaveFrom = new Date(from_date);
+    
+    if (leaveFrom < today) {
+      return res.status(400).json({ success: false, message: 'Leave cannot be applied for previous days' });
+    }
+
+    if (new Date(to_date) < leaveFrom) {
+      return res.status(400).json({ success: false, message: 'End date must be after start date' });
+    }
+
     const [result] = await db.query(
       'INSERT INTO leave_requests (student_id, reason, from_date, to_date) VALUES (?, ?, ?, ?)',
       [students[0].student_id, reason, from_date, to_date]
     );
+
 
     res.status(201).json({ success: true, data: { id: result.insertId, status: 'pending' } });
   } catch (error) {

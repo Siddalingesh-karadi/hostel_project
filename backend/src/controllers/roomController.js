@@ -4,8 +4,19 @@ const { db } = require('../config/db');
 // @route   GET /api/rooms
 exports.getAllRooms = async (req, res, next) => {
   try {
-    const [rows] = await db.query('SELECT * FROM rooms');
-    res.json({ success: true, count: rows.length, data: rows });
+    const [rooms] = await db.query('SELECT * FROM rooms');
+    
+    // Fetch students for each room
+    for (let room of rooms) {
+      const [roomStudents] = await db.query(
+        'SELECT s.student_id as id, u.name FROM students s JOIN users u ON s.user_id = u.id WHERE s.room_id = ?',
+        [room.room_id]
+      );
+      room.students = roomStudents;
+    }
+
+    res.json({ success: true, count: rooms.length, data: rooms });
+
   } catch (error) {
     next(error);
   }
@@ -102,3 +113,31 @@ exports.updateRoom = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Get student's roommates
+// @route   GET /api/rooms/my-roommates
+exports.getMyRoommates = async (req, res, next) => {
+  try {
+    // 1. Get current student's room_id
+    const [student] = await db.query('SELECT room_id FROM students WHERE user_id = ?', [req.user.id]);
+    
+    if (student.length === 0 || !student[0].room_id) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const roomId = student[0].room_id;
+
+    // 2. Get all students in that room (excluding self)
+    const [roommates] = await db.query(`
+      SELECT s.student_id, u.name, s.course, s.branch, s.phone 
+      FROM students s
+      JOIN users u ON s.user_id = u.id
+      WHERE s.room_id = ? AND s.user_id != ?
+    `, [roomId, req.user.id]);
+
+    res.json({ success: true, data: roommates });
+  } catch (error) {
+    next(error);
+  }
+};
+

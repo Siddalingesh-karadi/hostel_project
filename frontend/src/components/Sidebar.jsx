@@ -3,8 +3,10 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   HiHome, HiUserGroup, HiOfficeBuilding, HiExclamation, 
   HiCurrencyDollar, HiLogout, HiClipboardList, 
-  HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup 
+  HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup,
+  HiShieldCheck, HiChatAlt2, HiLightningBolt
 } from 'react-icons/hi';
+
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -17,7 +19,8 @@ const Sidebar = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student'] },
+    { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student', 'housekeeper', 'security'] },
+
     { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student', 'admin', 'warden'] },
     { name: 'Notices', path: '/notices', icon: <HiOutlineSpeakerphone />, roles: ['admin', 'warden', 'student'] },
     { name: 'Mess Menu', path: '/mess-menu', icon: <HiOutlineCalendar />, roles: ['admin', 'warden', 'student'] },
@@ -28,7 +31,13 @@ const Sidebar = () => {
     { name: 'Complaints', path: '/complaints', icon: <HiExclamation />, roles: ['admin', 'student', 'warden'] },
     { name: 'Fees', path: '/fees', icon: <HiCurrencyDollar />, roles: ['admin', 'student'] },
     { name: 'Leave', path: '/leaves', icon: <HiClipboardList />, roles: ['admin', 'student', 'warden'] },
+    { name: 'Cleaning', path: '/housekeeper', icon: <HiOutlineCube />, roles: ['housekeeper'] },
+    { name: 'Duty Roster', path: '/security', icon: <HiShieldCheck />, roles: ['security'] },
+    { name: 'Campus Alerts', path: '/security-alerts', icon: <HiLightningBolt />, roles: ['admin'] },
+    { name: 'Student Feedback', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin'] },
+    { name: 'Admin Support', path: '/student-support', icon: <HiChatAlt2 />, roles: ['student'] },
   ];
+
 
   return (
     <div className="w-64 min-h-screen bg-slate-900 border-r border-white/5 flex flex-col p-6">
