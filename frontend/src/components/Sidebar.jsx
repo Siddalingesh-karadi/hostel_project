@@ -21,7 +21,10 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student', 'housekeeper', 'security'] },
 
-    { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student', 'admin', 'warden'] },
+    { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student'] },
+    { name: 'Work Profile', path: '/staff-profile', icon: <HiUserGroup />, roles: ['admin', 'warden', 'housekeeper', 'security'] },
+    { name: 'Hostel Network', path: '/network', icon: <HiOutlineUserGroup />, roles: ['student'] },
+    { name: 'Gate Pass', path: '/security-scan', icon: <HiLightningBolt />, roles: ['security'] },
     { name: 'Notices', path: '/notices', icon: <HiOutlineSpeakerphone />, roles: ['admin', 'warden', 'student'] },
     { name: 'Mess Menu', path: '/mess-menu', icon: <HiOutlineCalendar />, roles: ['admin', 'warden', 'student'] },
     { name: 'Inventory', path: '/inventory', icon: <HiOutlineCube />, roles: ['admin'] },
@@ -34,7 +37,7 @@ const Sidebar = () => {
     { name: 'Cleaning', path: '/housekeeper', icon: <HiOutlineCube />, roles: ['housekeeper'] },
     { name: 'Duty Roster', path: '/security', icon: <HiShieldCheck />, roles: ['security'] },
     { name: 'Campus Alerts', path: '/security-alerts', icon: <HiLightningBolt />, roles: ['admin'] },
-    { name: 'Student Feedback', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin'] },
+    { name: 'Student Feedback', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin', 'warden'] },
     { name: 'Admin Support', path: '/student-support', icon: <HiChatAlt2 />, roles: ['student'] },
   ];
 

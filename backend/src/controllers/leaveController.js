@@ -37,12 +37,12 @@ exports.getMyLeaves = async (req, res, next) => {
 // @desc    Apply for leave
 // @route   POST /api/leaves
 exports.applyLeave = async (req, res, next) => {
-  const { reason, from_date, to_date } = req.body;
+  const { reason, from_date, to_date, destination } = req.body;
   try {
     const [students] = await db.query('SELECT student_id FROM students WHERE user_id = ?', [req.user.id]);
     if (students.length === 0) return res.status(404).json({ success: false, message: 'Student profile not found' });
 
-    // Date validation: Allow only for valid dates (today or future)
+    // Date validation
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const leaveFrom = new Date(from_date);
@@ -56,10 +56,9 @@ exports.applyLeave = async (req, res, next) => {
     }
 
     const [result] = await db.query(
-      'INSERT INTO leave_requests (student_id, reason, from_date, to_date) VALUES (?, ?, ?, ?)',
-      [students[0].student_id, reason, from_date, to_date]
+      'INSERT INTO leave_requests (student_id, reason, destination, from_date, to_date) VALUES (?, ?, ?, ?, ?)',
+      [students[0].student_id, reason, destination || 'N/A', from_date, to_date]
     );
-
 
     res.status(201).json({ success: true, data: { id: result.insertId, status: 'pending' } });
   } catch (error) {

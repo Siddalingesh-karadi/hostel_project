@@ -7,8 +7,10 @@ const StudentList = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
   const [formData, setFormData] = useState({
     name: '', email: '', course: '', branch: '', year: '', phone: '', blood_group: '', address: '',
     parent_name: '', parent_phone: '', aadhar_number: '', age: '', permanent_address: '',
@@ -116,7 +118,7 @@ const StudentList = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2 text-glow">Student Directory</h1>
-            <p className="text-slate-400">Total Registered: {students.length}</p>
+            <p className="text-slate-400">Total Registered: {students.length} | Click a name to view full details</p>
           </div>
           {user.role === 'admin' && (
             <button onClick={handleOpenAdd} className="btn-primary flex items-center gap-2">
@@ -135,7 +137,6 @@ const StudentList = () => {
               </h2>
               
               <form onSubmit={handleSubmit} className="space-y-10">
-                {/* Sections omitted for brevity but they are in the full implementation */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <FormInput label="Full Name" value={formData.name} onChange={(v) => setFormData({...formData, name: v})} required />
                   <FormInput label="Email" value={formData.email} onChange={(v) => setFormData({...formData, email: v})} required type="email" />
@@ -150,7 +151,6 @@ const StudentList = () => {
                   <FormInput label="USN" value={formData.usn} onChange={(v) => setFormData({...formData, usn: v})} />
                   <FormInput label="Semester" value={formData.semester} onChange={(v) => setFormData({...formData, semester: v})} type="number" />
                 </div>
-
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FormTextArea label="Local Address" value={formData.address} onChange={(v) => setFormData({...formData, address: v})} />
@@ -162,6 +162,53 @@ const StudentList = () => {
                   <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 py-4 rounded-xl font-bold transition-all">Discard</button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* View Details Modal */}
+        {showViewModal && selectedStudent && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="bg-[#0f0f13] border-2 border-indigo-500/30 w-full max-w-2xl rounded-[2.5rem] p-10 overflow-y-auto max-h-[90vh]">
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 bg-indigo-600 rounded-3xl flex items-center justify-center text-3xl font-black text-white shadow-2xl shadow-indigo-500/20">
+                    {selectedStudent.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-black text-white">{selectedStudent.name}</h2>
+                    <p className="text-indigo-400 font-bold tracking-widest uppercase text-xs">{selectedStudent.usn || selectedStudent.student_number}</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowViewModal(false)} className="bg-white/5 hover:bg-white/10 p-3 rounded-2xl text-slate-400 hover:text-white transition-all">✕</button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-8 mb-10">
+                <DetailRow label="Email" value={selectedStudent.email} />
+                <DetailRow label="Phone" value={selectedStudent.phone} />
+                <DetailRow label="Course" value={`${selectedStudent.course} (${selectedStudent.branch})`} />
+                <DetailRow label="Semester / Year" value={`${selectedStudent.semester} Sem / ${selectedStudent.year} Year`} />
+                <DetailRow label="Guardian" value={selectedStudent.parent_name} />
+                <DetailRow label="Guardian Phone" value={selectedStudent.parent_phone} />
+                <DetailRow label="Blood Group" value={selectedStudent.blood_group} />
+                <DetailRow label="Aadhar" value={selectedStudent.aadhar_number} />
+              </div>
+
+              <div className="space-y-6 bg-white/5 p-6 rounded-3xl border border-white/5">
+                <div>
+                  <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Local Address</p>
+                  <p className="text-white text-sm">{selectedStudent.address || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase text-slate-500 mb-1">Permanent Address</p>
+                  <p className="text-white text-sm">{selectedStudent.permanent_address || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div className="mt-8 pt-8 border-t border-white/5 flex gap-4">
+                <button onClick={() => { setShowViewModal(false); handleOpenEdit(selectedStudent); }} className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold transition-all shadow-lg shadow-indigo-600/20">Edit Record</button>
+                <button onClick={() => setShowViewModal(false)} className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-slate-300 rounded-2xl font-bold transition-all">Close</button>
+              </div>
             </div>
           </div>
         )}
@@ -192,8 +239,13 @@ const StudentList = () => {
               {filteredStudents.map(student => (
                 <tr key={student.student_id} className="hover:bg-white/[0.02] transition-colors group">
                   <td className="px-6 py-4">
-                    <p className="text-indigo-400 font-bold text-xs mb-1">{student.student_number || 'PENDING'}</p>
-                    <p className="text-white font-bold">{student.name}</p>
+                    <p className="text-indigo-400 font-bold text-[10px] mb-1 tracking-widest">{student.student_number || 'PENDING'}</p>
+                    <button 
+                      onClick={() => { setSelectedStudent(student); setShowViewModal(true); }}
+                      className="text-white font-bold hover:text-indigo-400 transition-colors text-left"
+                    >
+                      {student.name}
+                    </button>
                   </td>
                   <td className="px-6 py-4">
                     <p className="text-sm">{student.email}</p>
@@ -225,6 +277,13 @@ const StudentList = () => {
     </div>
   );
 };
+
+const DetailRow = ({ label, value }) => (
+  <div>
+    <p className="text-[10px] font-black uppercase text-slate-500 mb-1">{label}</p>
+    <p className="text-white font-bold">{value || 'Not Provided'}</p>
+  </div>
+);
 
 const FormInput = ({ label, value, onChange, type = "text", required = false }) => (
   <div className="space-y-2">

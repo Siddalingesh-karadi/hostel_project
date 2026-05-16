@@ -64,27 +64,52 @@ const updateDatabase = async () => {
 
     // 5. Seed administrator
     console.log('Seeding administrator...');
-    const adminEmail = 'administrator@gmail.com';
+    const adminEmail = 'administrator@hostel.com';
     const adminPass = 'administrator';
     const [adminRows] = await db.query('SELECT * FROM users WHERE email = ?', [adminEmail]);
     
     const salt = await bcrypt.genSalt(10);
-    const hashedPass = await bcrypt.hash(adminPass, salt);
+    const hashedAdminPass = await bcrypt.hash(adminPass, salt);
 
     if (adminRows.length === 0) {
       await db.query(
         'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-        ['Administrator', adminEmail, hashedPass, 'admin']
+        ['Administrator', adminEmail, hashedAdminPass, 'admin']
       );
       console.log('✅ Administrator created.');
     } else {
-      // Update password just in case
       await db.query(
         'UPDATE users SET password = ?, role = "admin" WHERE email = ?',
-        [hashedPass, adminEmail]
+        [hashedAdminPass, adminEmail]
       );
       console.log('✅ Administrator updated.');
     }
+
+    // 6. Seed Warden
+    console.log('Seeding warden...');
+    const wardenEmail = 'warden@hostel.com';
+    const wardenPass = 'warden';
+    const [wardenRows] = await db.query('SELECT * FROM users WHERE email = ?', [wardenEmail]);
+    
+    const hashedWardenPass = await bcrypt.hash(wardenPass, salt);
+
+    if (wardenRows.length === 0) {
+      await db.query(
+        'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
+        ['Warden', wardenEmail, hashedWardenPass, 'warden']
+      );
+      console.log('✅ Warden created.');
+    } else {
+      await db.query(
+        'UPDATE users SET password = ?, role = "warden" WHERE email = ?',
+        [hashedWardenPass, wardenEmail]
+      );
+      console.log('✅ Warden updated.');
+    }
+
+    // Cleanup old admin if exists
+    await db.query('DELETE FROM users WHERE email = ?', ['administrator@gmail.com']);
+
 
     console.log('✨ Database updates completed successfully!');
     process.exit(0);

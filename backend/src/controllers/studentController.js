@@ -5,9 +5,10 @@ const { db } = require('../config/db');
 exports.getAllStudents = async (req, res, next) => {
   try {
     const [rows] = await db.query(`
-      SELECT students.*, users.name, users.email 
+      SELECT students.*, users.name, users.email, rooms.room_number, rooms.block
       FROM students 
       JOIN users ON students.user_id = users.id
+      LEFT JOIN rooms ON students.room_id = rooms.room_id
     `);
     res.json({ success: true, count: rows.length, data: rows });
   } catch (error) {
@@ -20,9 +21,10 @@ exports.getAllStudents = async (req, res, next) => {
 exports.getStudentById = async (req, res, next) => {
   try {
     const [rows] = await db.query(`
-      SELECT students.*, users.name, users.email 
+      SELECT students.*, users.name, users.email, rooms.room_number, rooms.block
       FROM students 
       JOIN users ON students.user_id = users.id 
+      LEFT JOIN rooms ON students.room_id = rooms.room_id
       WHERE students.student_id = ?
     `, [req.params.id]);
 

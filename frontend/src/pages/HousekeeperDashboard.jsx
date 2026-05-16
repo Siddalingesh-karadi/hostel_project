@@ -24,6 +24,18 @@ const HousekeeperDashboard = () => {
     fetchTasks();
   }, []);
 
+  const handleAttendance = async (type) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('/api/attendance/toggle', { type }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert(`Attendance recorded: ${type}`);
+    } catch (err) {
+      alert('Failed to record attendance');
+    }
+  };
+
   const handleUpdateStatus = async (id, currentStatus) => {
     const newStatus = currentStatus === 'completed' ? 'pending' : 'completed';
     try {
@@ -44,9 +56,25 @@ const HousekeeperDashboard = () => {
   return (
     <div className="p-8 bg-slate-950 min-h-screen text-slate-100">
       <div className="max-w-5xl mx-auto">
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold text-white mb-2">Cleaning Schedule</h1>
-          <p className="text-slate-400">Assigned rooms for today's maintenance.</p>
+        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <h1 className="text-3xl font-bold text-white mb-2">Cleaning Schedule</h1>
+            <p className="text-slate-400">Assigned rooms for today's maintenance.</p>
+          </div>
+          <div className="flex gap-4">
+            <button 
+              onClick={() => handleAttendance('check-in')}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-600/20"
+            >
+              Check In
+            </button>
+            <button 
+              onClick={() => handleAttendance('check-out')}
+              className="px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-rose-600/20"
+            >
+              Check Out
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">

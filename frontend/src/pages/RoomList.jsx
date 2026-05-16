@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { HiPlus, HiPencil, HiTrash, HiUserAdd, HiLogout } from 'react-icons/hi';
+import { HiPlus, HiPencil, HiTrash, HiUserAdd, HiLogout, HiSearch, HiCheckCircle } from 'react-icons/hi';
 
 const RoomList = () => {
   const [rooms, setRooms] = useState([]);
@@ -14,8 +14,9 @@ const RoomList = () => {
   
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   
-  const [formData, setFormData] = useState({ room_number: '', block: '', capacity: '' });
+  const [formData, setFormData] = useState({ room_number: '', block: '', floor: '', capacity: '' });
   const user = JSON.parse(localStorage.getItem('user'));
 
   const fetchData = async () => {
@@ -27,8 +28,9 @@ const RoomList = () => {
       ]);
       setRooms(roomsRes.data.data);
       setStudents(studentsRes.data.data);
-    } catch (err) {
-      console.error('Failed to fetch data');
+    } catch (err) { 
+      console.error('Failed to fetch data', err);
+      alert('Failed to load student data. Check console.');
     } finally {
       setLoading(false);
     }
@@ -42,9 +44,12 @@ const RoomList = () => {
       const token = localStorage.getItem('token');
       await axios.post('/api/rooms', formData, { headers: { Authorization: `Bearer ${token}` } });
       setShowAddModal(false);
-      setFormData({ room_number: '', block: '', capacity: '' });
+      setFormData({ room_number: '', block: '', floor: '', capacity: '' });
       fetchData();
-    } catch (err) { alert('Failed to add room'); }
+    } catch (err) { 
+      alert(err.response?.data?.message || 'Failed to add room'); 
+    }
+
   };
 
   const handleEditRoom = async (e) => {
@@ -58,12 +63,18 @@ const RoomList = () => {
   };
 
   const handleAllocate = async () => {
+    if (!selectedStudent) {
+      return alert('Please select a student to allocate');
+    }
     try {
       const token = localStorage.getItem('token');
       await axios.post('/api/rooms/allocate', { room_id: selectedRoom.room_id, student_id: selectedStudent }, { headers: { Authorization: `Bearer ${token}` } });
       setShowAllocateModal(false);
+      setSelectedStudent('');
       fetchData();
-    } catch (err) { alert(err.response?.data?.message || 'Allocation failed'); }
+    } catch (err) { 
+      alert(err.response?.data?.message || 'Allocation failed'); 
+    }
   };
 
   const handleDeallocate = async (roomId, studentId) => {
@@ -81,13 +92,21 @@ const RoomList = () => {
         <div className="flex justify-between items-center mb-10">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2 text-glow">Room Management</h1>
-            <p className="text-slate-400">Manage hostel rooms and student allocations</p>
+            <p className="text-slate-400">Rooms: {rooms.length} | Unallocated: {students.filter(s => !s.room_id).length} | Total Students: {students.length}</p>
           </div>
-          {user.role === 'admin' && (
-            <button onClick={() => setShowAddModal(true)} className="btn-primary flex items-center gap-2">
+        <div className="flex gap-4 mb-2">
+          <button 
+            onClick={fetchData}
+            className="px-6 py-3 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl font-bold transition-all border border-white/5"
+          >
+            Refresh
+          </button>
+          {(user.role === 'admin' || user.role === 'warden') && (
+            <button onClick={() => { setFormData({ room_number: '', block: '', floor: '', capacity: '' }); setShowAddModal(true); }} className="btn-primary flex items-center gap-2">
               <HiPlus /> Add New Room
             </button>
           )}
+        </div>
         </div>
 
         {/* Room Grid */}
@@ -101,7 +120,7 @@ const RoomList = () => {
                 </div>
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => { setSelectedRoom(room); setFormData({ room_number: room.room_number, block: room.block, capacity: room.capacity }); setShowEditModal(true); }}
+                    onClick={() => { setSelectedRoom(room); setFormData({ room_number: room.room_number, block: room.block, floor: room.floor, capacity: room.capacity }); setShowEditModal(true); }}
                     className="p-2 hover:bg-white/10 rounded-lg text-emerald-400 transition-colors"
                   ><HiPencil /></button>
                 </div>
@@ -156,24 +175,88 @@ const RoomList = () => {
           />
         )}
 
-        {/* Allocation Modal */}
         {showAllocateModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="glass-card w-full max-w-md p-8">
-              <h2 className="text-xl font-bold text-white mb-6">Allocate Room {selectedRoom.room_number}</h2>
-              <select 
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white mb-6 outline-none"
-                value={selectedStudent}
-                onChange={(e) => setSelectedStudent(e.target.value)}
-              >
-                <option value="">Select Student...</option>
-                {students.filter(s => !s.room_id).map(s => (
-                  <option key={s.student_id} value={s.student_id}>{s.name} ({s.student_number})</option>
-                ))}
-              </select>
-              <div className="flex gap-4">
-                <button onClick={handleAllocate} className="flex-1 btn-primary">Allocate</button>
-                <button onClick={() => setShowAllocateModal(false)} className="flex-1 bg-white/5 text-slate-300 rounded-xl font-bold">Cancel</button>
+            <div className="glass-card w-full max-w-lg p-8 border-indigo-500/30 border-2">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-white mb-1">Allocate Room {selectedRoom.room_number}</h2>
+                  <p className="text-slate-400 text-sm">Select an unallocated student to assign</p>
+                </div>
+                <button onClick={() => setShowAllocateModal(false)} className="text-slate-500 hover:text-white transition-colors">
+                  <HiLogout className="text-2xl rotate-180" />
+                </button>
+              </div>
+
+              {/* Search Box */}
+              <div className="relative mb-6">
+                <input 
+                  type="text" 
+                  placeholder="Search students by name or USN..." 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white pl-12 focus:border-indigo-500 outline-none transition-all"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-xl" />
+              </div>
+
+              {/* Scrollable List */}
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                {students && students.filter(s => (!s.room_id || s.room_id === 0) && (
+                  s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  (s.student_number && s.student_number.toLowerCase().includes(searchTerm.toLowerCase()))
+                )).length > 0 ? (
+                  students.filter(s => (!s.room_id || s.room_id === 0) && (
+                    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                    (s.student_number && s.student_number.toLowerCase().includes(searchTerm.toLowerCase()))
+                  )).map(s => (
+                    <div 
+                      key={s.student_id} 
+                      onClick={() => setSelectedStudent(s.student_id)}
+                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex justify-between items-center group ${
+                        selectedStudent === s.student_id 
+                          ? 'bg-indigo-600/20 border-indigo-500 shadow-lg shadow-indigo-500/10' 
+                          : 'bg-white/5 border-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold ${selectedStudent === s.student_id ? 'bg-indigo-500 text-white' : 'bg-white/5 text-slate-400'}`}>
+                          {s.name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-bold text-white group-hover:text-indigo-400 transition-colors">{s.name}</p>
+                          <p className="text-xs text-slate-500 uppercase tracking-tighter">{s.student_number || 'STU-PENDING'}</p>
+                        </div>
+                      </div>
+                      {selectedStudent === s.student_id && (
+                        <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white">
+                          <HiCheckCircle />
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-10">
+                    <HiUserAdd className="text-5xl text-slate-700 mx-auto mb-4" />
+                    <p className="text-slate-500">No unallocated students match your search.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4 mt-8 pt-6 border-t border-white/10">
+                <button 
+                  onClick={handleAllocate} 
+                  disabled={!selectedStudent}
+                  className={`flex-1 py-4 rounded-xl font-bold transition-all ${
+                    selectedStudent 
+                      ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20' 
+                      : 'bg-white/5 text-slate-500 cursor-not-allowed'
+                  }`}
+                >
+                  Confirm Allocation
+                </button>
+                <button onClick={() => setShowAllocateModal(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl font-bold transition-all">
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
@@ -195,6 +278,10 @@ const RoomModal = ({ title, formData, setFormData, onSubmit, onClose }) => (
         <div>
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Block</label>
           <input type="text" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" value={formData.block} onChange={(e) => setFormData({...formData, block: e.target.value})} />
+        </div>
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Floor</label>
+          <input type="number" required className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500" value={formData.floor} onChange={(e) => setFormData({...formData, floor: e.target.value})} />
         </div>
         <div>
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-2 block">Capacity</label>

@@ -25,6 +25,9 @@ import SecurityDashboard from './pages/SecurityDashboard';
 import AdminMessages from './pages/AdminMessages';
 import SecurityAlerts from './pages/SecurityAlerts';
 import StudentSupport from './pages/StudentSupport';
+import StaffProfile from './pages/StaffProfile';
+import SecurityScan from './pages/SecurityScan';
+import StudentNetwork from './pages/StudentNetwork';
 
 
 const App = () => {
@@ -51,6 +54,9 @@ const App = () => {
         <Route path="/admin-messages" element={<ProtectedRoute><Layout><AdminMessages /></Layout></ProtectedRoute>} />
         <Route path="/security-alerts" element={<ProtectedRoute><Layout><SecurityAlerts /></Layout></ProtectedRoute>} />
         <Route path="/student-support" element={<ProtectedRoute><Layout><StudentSupport /></Layout></ProtectedRoute>} />
+        <Route path="/staff-profile" element={<ProtectedRoute><Layout><StaffProfile /></Layout></ProtectedRoute>} />
+        <Route path="/security-scan" element={<ProtectedRoute><Layout><SecurityScan /></Layout></ProtectedRoute>} />
+        <Route path="/network" element={<ProtectedRoute><Layout><StudentNetwork /></Layout></ProtectedRoute>} />
 
       </Routes>
     </Router>

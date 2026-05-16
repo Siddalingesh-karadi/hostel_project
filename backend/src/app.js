@@ -28,6 +28,9 @@ const broadcastRoutes = require('./routes/broadcastRoutes');
 const housekeeperRoutes = require('./routes/housekeeperRoutes');
 const securityRoutes = require('./routes/securityRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const staffRoutes = require('./routes/staffRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
+const gateRoutes = require('./routes/gateRoutes');
 
 
 // Routes
@@ -54,6 +57,9 @@ app.use('/api/broadcasts', broadcastRoutes);
 app.use('/api/housekeeper', housekeeperRoutes);
 app.use('/api/security', securityRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/staff', staffRoutes);
+app.use('/api/attendance', attendanceRoutes);
+app.use('/api/gate', gateRoutes);
 
 
 // Simple Error Handling

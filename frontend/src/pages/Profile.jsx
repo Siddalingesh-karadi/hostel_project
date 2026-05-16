@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { HiUser, HiAcademicCap, HiPhone, HiLocationMarker, HiIdentification, HiShieldCheck } from 'react-icons/hi';
 
+import { useNavigate } from 'react-router-dom';
+
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
 
   useEffect(() => {
+    if (user.role !== 'student') {
+      navigate('/staff-profile');
+      return;
+    }
+
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -21,7 +30,7 @@ const Profile = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [user.role, navigate]);
 
   if (loading) return <div className="p-8 text-white">Loading profile...</div>;
   if (!profile) return <div className="p-8 text-white">Profile not found. Please contact admin.</div>;

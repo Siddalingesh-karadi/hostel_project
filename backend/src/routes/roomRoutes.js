@@ -7,7 +7,7 @@ router.use(protect);
 
 router.get('/my-roommates', getMyRoommates);
 router.get('/', getAllRooms);
-router.post('/', authorize('admin'), addRoom);
+router.post('/', authorize('admin', 'warden'), addRoom);
 router.put('/:id', authorize('admin', 'warden'), updateRoom);
 router.post('/allocate', authorize('admin', 'warden'), allocateRoom);
 router.post('/deallocate', authorize('admin', 'warden'), deallocateRoom);
