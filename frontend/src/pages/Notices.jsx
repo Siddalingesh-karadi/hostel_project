@@ -1,13 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { HiOutlineSpeakerphone, HiOutlineTrash, HiOutlinePlusCircle } from 'react-icons/hi';
+import { HiOutlineSpeakerphone, HiOutlineTrash, HiOutlinePlusCircle, HiPaperClip, HiDocumentDownload, HiX, HiCheck } from 'react-icons/hi';
 
 const Notices = () => {
   const [notices, setNotices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [newNotice, setNewNotice] = useState({ title: '', content: '' });
+  const [attachment, setAttachment] = useState(null); // { url, name }
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+  
   const user = JSON.parse(localStorage.getItem('user'));
+  const token = localStorage.getItem('token');
 
   useEffect(() => {
     fetchNotices();
@@ -15,7 +20,6 @@ const Notices = () => {
 
   const fetchNotices = async () => {
     try {
-      const token = localStorage.getItem('token');
       const response = await axios.get('/api/notices', {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -27,15 +31,54 @@ const Notices = () => {
     }
   };
 
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size exceeds the 10MB limit.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    setUploading(true);
+    try {
+      const res = await axios.post('/api/messages/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setAttachment({
+        url: res.data.fileUrl,
+        name: res.data.fileName
+      });
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload file.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handlePostNotice = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('/api/notices', newNotice, {
+      const payload = {
+        ...newNotice,
+        attachment_url: attachment ? attachment.url : null,
+        file_name: attachment ? attachment.name : null
+      };
+
+      await axios.post('/api/notices', payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShowModal(false);
       setNewNotice({ title: '', content: '' });
+      setAttachment(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
       fetchNotices();
     } catch (err) {
       alert('Failed to post notice');
@@ -45,7 +88,6 @@ const Notices = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this notice?')) return;
     try {
-      const token = localStorage.getItem('token');
       await axios.delete(`/api/notices/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -53,6 +95,42 @@ const Notices = () => {
     } catch (err) {
       alert('Failed to delete notice');
     }
+  };
+
+  const renderNoticeAttachment = (notice) => {
+    if (!notice.attachment_url) return null;
+    const isImage = /\.(jpeg|jpg|gif|png|webp)$/i.test(notice.attachment_url);
+
+    if (isImage) {
+      return (
+        <div className="mt-4">
+          <a href={notice.attachment_url} target="_blank" rel="noopener noreferrer">
+            <img 
+              src={notice.attachment_url} 
+              alt="Notice Attachment" 
+              className="max-h-96 rounded-xl border border-white/10 shadow-lg hover:opacity-95 transition-all cursor-zoom-in"
+            />
+          </a>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-4">
+        <a 
+          href={notice.attachment_url} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all max-w-sm text-left"
+        >
+          <HiDocumentDownload className="text-2xl text-indigo-400 flex-shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-white truncate">{notice.file_name || 'Download PDF/Attachment'}</p>
+            <p className="text-[10px] text-slate-500">Click to view or download</p>
+          </div>
+        </a>
+      </div>
+    );
   };
 
   return (
@@ -99,7 +177,8 @@ const Notices = () => {
                   </button>
                 )}
               </div>
-              <p className="text-slate-300 whitespace-pre-wrap">{notice.content}</p>
+              <p className="text-slate-300 whitespace-pre-wrap leading-relaxed">{notice.content}</p>
+              {renderNoticeAttachment(notice)}
             </div>
           ))}
         </div>
@@ -122,7 +201,7 @@ const Notices = () => {
                   placeholder="e.g., Holiday Announcement"
                 />
               </div>
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-slate-400 text-sm font-bold mb-2">Content</label>
                 <textarea 
                   required
@@ -133,17 +212,74 @@ const Notices = () => {
                   placeholder="Type your notice message here..."
                 ></textarea>
               </div>
+
+              {/* Attachment option */}
+              <div className="mb-6">
+                <label className="block text-slate-400 text-sm font-bold mb-2">File Attachment (Optional)</label>
+                
+                {attachment ? (
+                  <div className="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <HiDocumentDownload className="text-xl text-indigo-400 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-white truncate">{attachment.name}</p>
+                        <p className="text-[10px] text-emerald-400 flex items-center gap-1">
+                          <HiCheck /> Uploaded successfully
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachment(null);
+                        if (fileInputRef.current) fileInputRef.current.value = '';
+                      }}
+                      className="p-1 hover:bg-white/10 text-slate-400 hover:text-white rounded-lg transition-colors"
+                    >
+                      <HiX className="text-lg" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef}
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept="image/*,application/pdf"
+                    />
+                    <button
+                      type="button"
+                      disabled={uploading}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-full py-4 border-2 border-dashed border-slate-800 hover:border-indigo-500/50 rounded-xl flex flex-col items-center justify-center gap-2 text-slate-400 hover:text-white transition-all bg-slate-900/50 ${
+                        uploading ? 'animate-pulse text-indigo-400 border-indigo-500/40' : ''
+                      }`}
+                    >
+                      <HiPaperClip className="text-2xl" />
+                      <span className="text-xs font-bold">
+                        {uploading ? 'Uploading notice file...' : 'Choose Image or PDF (Max 10MB)'}
+                      </span>
+                    </button>
+                  </>
+                )}
+              </div>
+
               <div className="flex justify-end gap-4">
                 <button 
                   type="button"
-                  onClick={() => setShowModal(false)}
+                  onClick={() => {
+                    setShowModal(false);
+                    setAttachment(null);
+                  }}
                   className="px-6 py-2 text-slate-400 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-500/20"
+                  disabled={uploading}
+                  className="px-8 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-bold transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Post Notice
                 </button>

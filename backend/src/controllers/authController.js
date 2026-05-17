@@ -5,50 +5,11 @@ const { db } = require('../config/db');
 // @desc    Register a new user
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
-  const { name, email, password, role } = req.body;
-
   try {
-    // 1. Check if user exists or if email is protected
-    if (email === 'administrator@gmail.com') {
-      return res.status(400).json({ success: false, message: 'This email is reserved for administration' });
-    }
-
-    if (role && role !== 'student') {
-      return res.status(400).json({ success: false, message: 'Only student accounts can be registered publicly. Other roles must be created by an Administrator.' });
-    }
-
-
-    const [rows] = await db.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (rows.length > 0) {
-      return res.status(400).json({ success: false, message: 'User already exists' });
-    }
-
-    // 2. Hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    // 3. Create user
-    const [result] = await db.query(
-      'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-      [name, email, hashedPassword, role || 'student']
-    );
-
-    const userId = result.insertId;
-
-    // 4. Create blank student profile if role is student
-    if ((role || 'student') === 'student') {
-      await db.query('INSERT INTO students (user_id) VALUES (?)', [userId]);
-    }
-
-    // 5. Generate Token
-    const token = jwt.sign({ id: result.insertId, role: role || 'student' }, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRE,
-    });
-
-    res.status(201).json({
-      success: true,
-      token,
-      user: { id: result.insertId, name, email, role: role || 'student' }
+    // Public registration is disabled. All accounts are created by Admin/Warden.
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Public registration is disabled. All student accounts must be created by an Administrator or Warden.' 
     });
   } catch (error) {
     next(error);
@@ -85,6 +46,42 @@ exports.login = async (req, res, next) => {
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role }
     });
+  } catch (error) {
+    next(error);
+  }
+};
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+exports.changePassword = async (req, res, next) => {
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: 'Please provide current and new password.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters.' });
+    }
+
+    // 1. Fetch user from DB
+    const [rows] = await db.query('SELECT * FROM users WHERE id = ?', [req.user.id]);
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+    const user = rows[0];
+
+    // 2. Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+    }
+
+    // 3. Hash and save new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, req.user.id]);
+
+    res.json({ success: true, message: 'Password changed successfully!' });
   } catch (error) {
     next(error);
   }

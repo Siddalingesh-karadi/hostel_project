@@ -55,7 +55,7 @@ exports.createStudent = async (req, res, next) => {
     await conn.beginTransaction();
 
     // 1. Create User Account
-    const hashedPassword = await bcrypt.hash('student123', 10);
+    const hashedPassword = await bcrypt.hash(name, 10);
     const [userResult] = await conn.query(
       'INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
       [name, email, hashedPassword, 'student']

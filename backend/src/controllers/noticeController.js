@@ -19,13 +19,13 @@ exports.getNotices = async (req, res, next) => {
 // @desc    Create a notice
 // @route   POST /api/notices
 exports.createNotice = async (req, res, next) => {
-  const { title, content } = req.body;
+  const { title, content, attachment_url, file_name } = req.body;
   const userId = req.user.id;
 
   try {
     const [result] = await db.query(
-      'INSERT INTO notices (title, content, created_by) VALUES (?, ?, ?)',
-      [title, content, userId]
+      'INSERT INTO notices (title, content, created_by, attachment_url, file_name) VALUES (?, ?, ?, ?, ?)',
+      [title, content, userId, attachment_url || null, file_name || null]
     );
     res.status(201).json({ success: true, message: 'Notice posted successfully' });
   } catch (error) {

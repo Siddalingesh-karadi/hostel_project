@@ -53,8 +53,7 @@ const Sidebar = () => {
 
     { name: 'Duty Roster', path: '/security', icon: <HiShieldCheck />, roles: ['security'] },
 
-    { name: 'Direct Messages', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin', 'warden'] },
-    { name: 'Admin Support', path: '/student-support', icon: <HiChatAlt2 />, roles: ['student'] },
+    { name: 'Messages', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin', 'warden', 'student'] },
   ];
 
 
@@ -77,14 +76,14 @@ const Sidebar = () => {
               ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}
             `}
             onClick={() => {
-              if (item.name === 'Direct Messages' || item.name === 'Admin Support') {
+              if (item.name === 'Messages') {
                 setUnreadCount(0);
               }
             }}
           >
             <span className="text-xl">{item.icon}</span>
             <span className="font-medium text-sm flex-1">{item.name}</span>
-            {(item.name === 'Direct Messages' || item.name === 'Admin Support') && unreadCount > 0 && (
+            {item.name === 'Messages' && unreadCount > 0 && (
               <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
                 {unreadCount} New
               </span>

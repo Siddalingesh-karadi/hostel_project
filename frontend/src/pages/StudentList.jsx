@@ -135,11 +135,7 @@ const StudentList = () => {
                 <div className="w-2 h-8 bg-indigo-500 rounded-full"></div>
                 {isEditing ? 'Update Student Record' : 'New Admission Form'}
               </h2>
-              {!isEditing && (
-                <p className="text-indigo-400 text-sm font-bold mb-8 uppercase tracking-widest bg-indigo-500/10 inline-block px-4 py-2 rounded-xl">
-                  Notice: Default password for new students is 'student123'
-                </p>
-              )}
+
               
               <form onSubmit={handleSubmit} className="space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

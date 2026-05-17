@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { HiUser, HiAcademicCap, HiPhone, HiLocationMarker, HiIdentification, HiShieldCheck } from 'react-icons/hi';
-
+import { HiUser, HiAcademicCap, HiLocationMarker, HiShieldCheck } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
@@ -9,6 +8,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
+
+
 
   useEffect(() => {
     if (user.role !== 'student') {
@@ -32,6 +33,33 @@ const Profile = () => {
     fetchProfile();
   }, [user.role, navigate]);
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setPwMessage(null);
+
+    if (pwForm.newPassword !== pwForm.confirmPassword) {
+      return setPwMessage({ type: 'error', text: 'New passwords do not match.' });
+    }
+    if (pwForm.newPassword.length < 6) {
+      return setPwMessage({ type: 'error', text: 'New password must be at least 6 characters.' });
+    }
+
+    setPwLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.put('/api/auth/change-password',
+        { currentPassword: pwForm.currentPassword, newPassword: pwForm.newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setPwMessage({ type: 'success', text: res.data.message });
+      setPwForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      setPwMessage({ type: 'error', text: err.response?.data?.message || 'Failed to change password.' });
+    } finally {
+      setPwLoading(false);
+    }
+  };
+
   if (loading) return <div className="p-8 text-white">Loading profile...</div>;
   if (!profile) return <div className="p-8 text-white">Profile not found. Please contact admin.</div>;
 
@@ -48,7 +76,6 @@ const Profile = () => {
               <span className="bg-indigo-500/10 text-indigo-400 px-3 py-1 rounded-full text-xs font-bold border border-indigo-500/20 uppercase tracking-widest">
                 {profile.usn || profile.student_number || 'STU-PENDING'}
               </span>
-
               <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold border border-emerald-500/20 uppercase tracking-widest">
                 Active Student
               </span>
@@ -83,6 +110,7 @@ const Profile = () => {
                 <InfoItem label="Permanent Home Address" value={profile.permanent_address || 'No permanent address provided'} />
               </div>
             </ProfileSection>
+
           </div>
 
           {/* Sidebar Info */}
@@ -98,7 +126,6 @@ const Profile = () => {
                 <InfoItem label="Semester" value={`${profile.semester} Sem`} />
                 <InfoItem label="USN" value={profile.usn} />
                 <InfoItem label="Current Year" value={`${profile.year} Year`} />
-
               </div>
             </div>
 
@@ -122,6 +149,24 @@ const Profile = () => {
     </div>
   );
 };
+
+const PasswordInput = ({ label, value, onChange, show, onToggle }) => (
+  <div className="space-y-2">
+    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</label>
+    <div className="relative">
+      <input
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        required
+        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 pr-10 text-white focus:border-amber-500 focus:ring-0 outline-none transition-all"
+      />
+      <button type="button" onClick={onToggle} className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-white transition-colors">
+        {show ? <HiEyeOff /> : <HiEye />}
+      </button>
+    </div>
+  </div>
+);
 
 const ProfileSection = ({ title, icon, children }) => (
   <div className="glass-card p-8 relative overflow-hidden">
