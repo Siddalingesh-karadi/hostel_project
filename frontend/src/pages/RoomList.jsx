@@ -101,7 +101,7 @@ const RoomList = () => {
           >
             Refresh
           </button>
-          {(user.role === 'admin' || user.role === 'warden') && (
+          {user.role === 'warden' && (
             <button onClick={() => { setFormData({ room_number: '', block: '', floor: '', capacity: '' }); setShowAddModal(true); }} className="btn-primary flex items-center gap-2">
               <HiPlus /> Add New Room
             </button>
@@ -202,11 +202,11 @@ const RoomList = () => {
               {/* Scrollable List */}
               <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2 custom-scrollbar">
                 {students && students.filter(s => (!s.room_id || s.room_id === 0) && (
-                  s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                   (s.student_number && s.student_number.toLowerCase().includes(searchTerm.toLowerCase()))
                 )).length > 0 ? (
                   students.filter(s => (!s.room_id || s.room_id === 0) && (
-                    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
                     (s.student_number && s.student_number.toLowerCase().includes(searchTerm.toLowerCase()))
                   )).map(s => (
                     <div 

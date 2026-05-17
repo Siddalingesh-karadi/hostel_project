@@ -154,7 +154,7 @@ const ComplaintList = () => {
                 <div className="flex items-center gap-4 text-xs text-slate-500">
                   <span className="flex items-center gap-1"><HiClock /> {new Date(complaint.created_at).toLocaleDateString()}</span>
                   <span className="px-2 py-0.5 bg-white/5 rounded border border-white/5 lowercase">{complaint.category}</span>
-                  {user.role !== 'student' && <span className="text-indigo-400 font-bold italic">Student: {complaint.name}</span>}
+                  {user.role !== 'student' && <span className="text-indigo-400 font-bold italic">Student: {complaint.name} ({complaint.hostel_name || 'Unassigned'} - {complaint.room_number ? 'Room ' + complaint.room_number : 'No Room'})</span>}
                 </div>
               </div>
 

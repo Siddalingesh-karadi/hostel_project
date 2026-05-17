@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import { HiLightningBolt, HiCheckCircle, HiXCircle, HiSearch, HiIdentification, HiLocationMarker, HiClock } from 'react-icons/hi';
+import { HiLightningBolt, HiCheckCircle, HiXCircle, HiSearch, HiIdentification, HiLocationMarker, HiClock, HiPhone } from 'react-icons/hi';
 
 const SecurityScan = () => {
   const [leaveId, setLeaveId] = useState('');
@@ -100,6 +100,10 @@ const SecurityScan = () => {
               <div className="grid grid-cols-2 gap-8">
                 <DetailItem icon={<HiLocationMarker />} label="Destination" value={leaveData.destination} color="text-indigo-400" />
                 <DetailItem icon={<HiClock />} label="Duration" value={`${new Date(leaveData.from_date).toLocaleDateString()} - ${new Date(leaveData.to_date).toLocaleDateString()}`} color="text-amber-400" />
+              </div>
+              <div className="grid grid-cols-2 gap-8">
+                <DetailItem icon={<HiIdentification />} label="Branch" value={leaveData.branch || 'N/A'} color="text-emerald-400" />
+                <DetailItem icon={<HiPhone />} label="Mobile" value={leaveData.phone || 'N/A'} color="text-rose-400" />
               </div>
 
               <div className="p-6 bg-white/5 rounded-2xl border border-white/5">

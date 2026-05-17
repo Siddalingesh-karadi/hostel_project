@@ -5,10 +5,11 @@ const { db } = require('../config/db');
 exports.getAllLeaves = async (req, res, next) => {
   try {
     const [rows] = await db.query(`
-      SELECT leave_requests.*, users.name, students.phone 
+      SELECT leave_requests.*, users.name, students.phone, w.name AS warden_name
       FROM leave_requests 
       JOIN students ON leave_requests.student_id = students.student_id
       JOIN users ON students.user_id = users.id
+      LEFT JOIN users w ON leave_requests.approved_by = w.id
       ORDER BY leave_requests.created_at DESC
     `);
     res.json({ success: true, count: rows.length, data: rows });
@@ -22,9 +23,10 @@ exports.getAllLeaves = async (req, res, next) => {
 exports.getMyLeaves = async (req, res, next) => {
   try {
     const [rows] = await db.query(`
-      SELECT leave_requests.* 
+      SELECT leave_requests.*, w.name AS warden_name
       FROM leave_requests 
       JOIN students ON leave_requests.student_id = students.student_id
+      LEFT JOIN users w ON leave_requests.approved_by = w.id
       WHERE students.user_id = ?
       ORDER BY leave_requests.created_at DESC
     `, [req.user.id]);
@@ -71,7 +73,11 @@ exports.applyLeave = async (req, res, next) => {
 exports.updateLeaveStatus = async (req, res, next) => {
   const { status } = req.body;
   try {
-    const [result] = await db.query('UPDATE leave_requests SET status = ? WHERE leave_id = ?', [status, req.params.id]);
+    const wardenId = status === 'approved' ? req.user.id : null;
+    const [result] = await db.query(
+      'UPDATE leave_requests SET status = ?, approved_by = ? WHERE leave_id = ?', 
+      [status, wardenId, req.params.id]
+    );
     if (result.affectedRows === 0) return res.status(404).json({ success: false, message: 'Request not found' });
     res.json({ success: true, message: 'Leave request updated successfully' });
   } catch (error) {

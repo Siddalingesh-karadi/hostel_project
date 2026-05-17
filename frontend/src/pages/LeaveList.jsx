@@ -132,10 +132,15 @@ const LeaveList = () => {
                     }`}>
                       {leave.status}
                     </span>
+                    {leave.status === 'approved' && leave.warden_name && (
+                      <p className="text-[10px] text-emerald-500/80 mt-2 font-bold uppercase tracking-widest">
+                        By: {leave.warden_name}
+                      </p>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      {leave.status === 'approved' && (
+                      {leave.status === 'approved' && user.role === 'student' && (
                         <button 
                           onClick={() => { setSelectedLeave(leave); setShowQRModal(true); }}
                           className="p-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-lg flex items-center gap-1 text-xs font-bold"
@@ -212,12 +217,7 @@ const LeaveList = () => {
               </div>
 
               <div className="bg-white p-6 rounded-3xl mx-auto mb-8 shadow-2xl shadow-emerald-500/20 inline-block">
-                <QRCodeSVG value={JSON.stringify({
-                  type: 'leave_pass',
-                  leave_id: selectedLeave.leave_id,
-                  student_id: selectedLeave.student_id,
-                  name: selectedLeave.name
-                })} size={180} />
+                <QRCodeSVG value={`Hostel Leave Pass\nID: ${selectedLeave.leave_id}\nStudent: ${selectedLeave.name}\nDestination: ${selectedLeave.destination}\nFrom: ${new Date(selectedLeave.from_date).toLocaleDateString()}\nTo: ${new Date(selectedLeave.to_date).toLocaleDateString()}\nStatus: APPROVED`} size={200} includeMargin={true} />
               </div>
 
               <div className="space-y-4 mb-8 text-left bg-white/5 p-4 rounded-2xl border border-white/5">

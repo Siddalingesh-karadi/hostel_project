@@ -56,11 +56,11 @@ exports.updateFee = async (req, res, next) => {
     const [feeRows] = await db.query('SELECT amount FROM fees WHERE fee_id = ?', [req.params.id]);
     if (feeRows.length === 0) return res.status(404).json({ success: false, message: 'Fee record not found' });
     
-    const totalAmount = parseFloat(feeRows[0].amount);
+    const totalHostelFee = 67000;
     const paid = parseFloat(paid_amount);
     
     let finalStatus = status;
-    if (paid >= totalAmount) {
+    if (paid >= totalHostelFee) {
       finalStatus = 'paid';
     } else if (paid > 0) {
       finalStatus = 'partial';
@@ -74,6 +74,29 @@ exports.updateFee = async (req, res, next) => {
     );
 
     res.json({ success: true, message: 'Fee updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get global fee deadline
+// @route   GET /api/fees/deadline
+exports.getDeadline = async (req, res, next) => {
+  try {
+    const [rows] = await db.query("SELECT setting_value FROM settings WHERE setting_key = 'fee_deadline'");
+    res.json({ success: true, deadline: rows.length > 0 ? rows[0].setting_value : 'Not Announced Yet' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update global fee deadline (Admin only)
+// @route   PUT /api/fees/deadline
+exports.updateDeadline = async (req, res, next) => {
+  try {
+    const { deadline } = req.body;
+    await db.query("UPDATE settings SET setting_value = ? WHERE setting_key = 'fee_deadline'", [deadline]);
+    res.json({ success: true, message: 'Deadline updated successfully' });
   } catch (error) {
     next(error);
   }

@@ -26,8 +26,8 @@ const StudentNetwork = () => {
   }, []);
 
   const filteredStudents = students.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.branch.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.branch?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (s.usn && s.usn.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 

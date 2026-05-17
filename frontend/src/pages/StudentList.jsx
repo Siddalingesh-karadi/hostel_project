@@ -108,7 +108,7 @@ const StudentList = () => {
   };
 
   const filteredStudents = students.filter(student => 
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     student.student_number?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -120,7 +120,7 @@ const StudentList = () => {
             <h1 className="text-3xl font-bold text-white mb-2 text-glow">Student Directory</h1>
             <p className="text-slate-400">Total Registered: {students.length} | Click a name to view full details</p>
           </div>
-          {user.role === 'admin' && (
+          {(user.role === 'admin' || user.role === 'warden') && (
             <button onClick={handleOpenAdd} className="btn-primary flex items-center gap-2">
               <HiUserAdd className="text-xl" /> Add New Admission
             </button>
@@ -131,10 +131,15 @@ const StudentList = () => {
         {showModal && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div className="bg-[#0f0f13] border border-white/10 w-full max-w-4xl rounded-3xl p-8 max-h-[90vh] overflow-y-auto shadow-2xl shadow-indigo-500/10">
-              <h2 className="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+              <h2 className="text-2xl font-bold text-white mb-2 flex items-center gap-3">
                 <div className="w-2 h-8 bg-indigo-500 rounded-full"></div>
                 {isEditing ? 'Update Student Record' : 'New Admission Form'}
               </h2>
+              {!isEditing && (
+                <p className="text-indigo-400 text-sm font-bold mb-8 uppercase tracking-widest bg-indigo-500/10 inline-block px-4 py-2 rounded-xl">
+                  Notice: Default password for new students is 'student123'
+                </p>
+              )}
               
               <form onSubmit={handleSubmit} className="space-y-10">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

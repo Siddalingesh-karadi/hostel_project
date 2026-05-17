@@ -14,9 +14,9 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 router.use(protect);
 
 router.get('/me', protect, getMyProfile);
-router.get('/', protect, authorize('admin', 'warden'), getAllStudents);
+router.get('/', protect, authorize('admin', 'warden', 'student'), getAllStudents);
 router.get('/:id', getStudentById); // Students can see their own profile
-router.post('/', authorize('admin'), createStudent);
+router.post('/', authorize('admin', 'warden'), createStudent);
 router.put('/:id', authorize('admin', 'warden'), updateStudent);
 router.delete('/:id', authorize('admin'), deleteStudent);
 

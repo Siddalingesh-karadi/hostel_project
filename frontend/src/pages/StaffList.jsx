@@ -86,7 +86,7 @@ const StaffList = () => {
       
       <div className="flex justify-end mb-8">
 
-          {['all', 'student', 'warden', 'housekeeper', 'security'].map(f => (
+          {['all', 'student', 'warden', 'security'].map(f => (
             <button 
               key={f}
               onClick={() => setFilter(f)}
@@ -163,7 +163,7 @@ const StaffList = () => {
                 >
                   <option value="student">Student</option>
                   <option value="warden">Warden</option>
-                  <option value="housekeeper">Housekeeper</option>
+
                   <option value="security">Security</option>
                 </select>
               </div>
@@ -185,7 +185,7 @@ const getRoleColor = (role) => {
     case 'admin': return 'bg-rose-500';
     case 'warden': return 'bg-amber-500';
     case 'student': return 'bg-indigo-500';
-    case 'housekeeper': return 'bg-emerald-500';
+
     case 'security': return 'bg-slate-500';
     default: return 'bg-slate-700';
   }

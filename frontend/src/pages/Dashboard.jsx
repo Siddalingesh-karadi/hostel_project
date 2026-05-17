@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { 
-  HiUserGroup, HiOfficeBuilding, HiExclamation, HiCurrencyDollar, 
+  HiUserGroup, HiOfficeBuilding, HiExclamation, HiCurrencyRupee, 
   HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup,
-  HiLightningBolt, HiOutlineX
+  HiLightningBolt, HiOutlineX, HiShieldCheck
 } from 'react-icons/hi';
 
 const Dashboard = () => {
@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [myFeeDetails, setMyFeeDetails] = useState(null);
   const [myLeaveDetails, setMyLeaveDetails] = useState(null);
+  const [showAllNotifications, setShowAllNotifications] = useState(false);
 
 
 
@@ -151,34 +152,50 @@ const Dashboard = () => {
           <StatCard title="Occupancy" value={stats.occupancy} icon={<HiOfficeBuilding />} color="bg-emerald-500" onClick={() => navigate('/rooms')} />
           <StatCard title="Pending" value={stats.pendingComplaints} icon={<HiExclamation />} color="bg-rose-500" onClick={() => navigate('/complaints')} />
           {user.role === 'admin' && (
-            <StatCard title="Unpaid Fees" value={`$${stats.unpaidFees}`} icon={<HiCurrencyDollar />} color="bg-amber-500" onClick={() => navigate('/fees')} />
+            <StatCard title="Unpaid Fees" value={`₹${stats.unpaidFees}`} icon={<HiCurrencyRupee />} color="bg-amber-500" onClick={() => navigate('/fees')} />
           )}
         </div>
 
-        {/* Security Deployment Map (Text Based) */}
-        {user.role === 'admin' && (
-          <div className="mt-10 glass-card p-8">
-            <h3 className="text-white font-bold mb-6 flex items-center gap-2">
-              <HiShieldCheck className="text-emerald-500" /> Active Security Deployment
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {stats.securityLocations?.length > 0 ? stats.securityLocations.map((loc, i) => (
-                <div key={i} className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-indigo-400 font-black text-[10px] uppercase tracking-widest mb-1">{loc.location}</p>
-                  <p className="text-white font-bold text-sm">{loc.name}</p>
-                </div>
-              )) : (
-                <p className="text-slate-500 italic col-span-full">No security personnel assigned for today.</p>
-              )}
-            </div>
+        <div className="mt-10 mb-4">
+          <h3 className="text-white font-bold mb-6 flex items-center gap-2">
+            <HiOutlineSpeakerphone className="text-indigo-500" /> Recent Activity & Notifications
+          </h3>
+          <div className="space-y-4">
+            {stats.notifications?.length > 0 ? (
+              <>
+                {stats.notifications.slice(0, showAllNotifications ? undefined : 3).map((notif, i) => (
+                  <div key={i} className={`glass-card p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-l-4 hover:bg-white/5 transition-all ${
+                    notif.type === 'student' ? 'border-emerald-500' :
+                    notif.type === 'fee' ? 'border-amber-500' : 'border-indigo-500'
+                  }`}>
+                    <div>
+                      <h4 className="text-white font-bold text-sm">{notif.title}</h4>
+                      <p className="text-slate-400 text-xs mt-1">{notif.message}</p>
+                    </div>
+                    <span className="text-[10px] font-black uppercase text-slate-500 whitespace-nowrap bg-white/5 px-3 py-1 rounded-full">
+                      {new Date(notif.time).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+                {stats.notifications.length > 3 && (
+                  <button 
+                    onClick={() => setShowAllNotifications(!showAllNotifications)}
+                    className="w-full py-3 mt-4 text-xs font-bold text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 uppercase tracking-widest border border-white/5 hover:border-indigo-500/30 rounded-xl transition-all"
+                  >
+                    {showAllNotifications ? 'Show Less' : `View All Activity (${stats.notifications.length} Total)`}
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="text-slate-500 italic">No recent activity.</p>
+            )}
           </div>
-        )}
-
+        </div>
 
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <FeatureCard title="Hostel Notices" subtitle="Announcements" icon={<HiOutlineSpeakerphone />} onClick={() => navigate('/notices')} color="border-indigo-500" />
           <FeatureCard title="Mess Menu" subtitle="Weekly Schedule" icon={<HiOutlineCalendar />} onClick={() => navigate('/mess-menu')} color="border-amber-500" />
-          <FeatureCard title="Trigger Alert" subtitle="Emergency Broadcast" icon={<HiLightningBolt />} onClick={() => setShowBroadcastModal(true)} color="border-rose-600 bg-rose-600/5" />
+
           
           {user.role === 'admin' && (
             <>
@@ -299,7 +316,7 @@ const Dashboard = () => {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="glass-card w-full max-w-md p-8 border-emerald-500/30 border-2">
             <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <HiCurrencyDollar className="text-emerald-500" /> Fee Details
+              <HiCurrencyRupee className="text-emerald-500" /> Fee Details
             </h2>
             {myFeeDetails ? (
               <div className="space-y-6">
@@ -315,8 +332,8 @@ const Dashboard = () => {
                     <p className="text-white font-bold">{myFeeDetails.payment_date ? new Date(myFeeDetails.payment_date).toLocaleDateString() : 'N/A'}</p>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <p className="text-xs text-slate-500 uppercase font-black mb-1">Balance</p>
-                    <p className="text-rose-400 font-bold">${(myFeeDetails.amount - (myFeeDetails.paid_amount || 0)).toLocaleString()}</p>
+                    <p className="text-xs text-slate-500 uppercase font-black mb-1">Total Balance</p>
+                    <p className="text-rose-400 font-bold">₹{(67000 - (myFeeDetails.paid_amount || 0)).toLocaleString()}</p>
                   </div>
                 </div>
               </div>

@@ -26,7 +26,7 @@ exports.logGateActivity = async (req, res, next) => {
 exports.verifyLeave = async (req, res, next) => {
   try {
     const [leave] = await db.query(`
-      SELECT l.*, u.name, s.student_number as usn, s.phone
+      SELECT l.*, u.name, s.student_number as usn, s.phone, s.branch
       FROM leave_requests l
       JOIN students s ON l.student_id = s.student_id
       JOIN users u ON s.user_id = u.id

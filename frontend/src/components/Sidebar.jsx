@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   HiHome, HiUserGroup, HiOfficeBuilding, HiExclamation, 
-  HiCurrencyDollar, HiLogout, HiClipboardList, 
+  HiCurrencyRupee, HiLogout, HiClipboardList, 
   HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup,
   HiShieldCheck, HiChatAlt2, HiLightningBolt
 } from 'react-icons/hi';
@@ -11,6 +12,21 @@ import {
 const Sidebar = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        const res = await axios.get('/api/messages/unread-count', { headers: { Authorization: `Bearer ${token}` } });
+        setUnreadCount(res.data.count);
+      } catch (err) {}
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -19,25 +35,25 @@ const Sidebar = () => {
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student', 'housekeeper', 'security'] },
+    { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student', 'security'] },
 
     { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student'] },
-    { name: 'Work Profile', path: '/staff-profile', icon: <HiUserGroup />, roles: ['admin', 'warden', 'housekeeper', 'security'] },
-    { name: 'Hostel Network', path: '/network', icon: <HiOutlineUserGroup />, roles: ['student'] },
+    { name: 'Work Profile', path: '/staff-profile', icon: <HiUserGroup />, roles: ['admin', 'warden', 'security'] },
+    { name: 'Hostel Network', path: '/network', icon: <HiOutlineUserGroup />, roles: ['student', 'warden'] },
     { name: 'Gate Pass', path: '/security-scan', icon: <HiLightningBolt />, roles: ['security'] },
     { name: 'Notices', path: '/notices', icon: <HiOutlineSpeakerphone />, roles: ['admin', 'warden', 'student'] },
     { name: 'Mess Menu', path: '/mess-menu', icon: <HiOutlineCalendar />, roles: ['admin', 'warden', 'student'] },
-    { name: 'Inventory', path: '/inventory', icon: <HiOutlineCube />, roles: ['admin'] },
+    { name: 'Inventory', path: '/inventory', icon: <HiOutlineCube />, roles: ['admin', 'warden'] },
     { name: 'Community', path: '/staff', icon: <HiOutlineUserGroup />, roles: ['admin'] },
     { name: 'Students', path: '/students', icon: <HiUserGroup />, roles: ['admin', 'warden'] },
     { name: 'Rooms', path: '/rooms', icon: <HiOfficeBuilding />, roles: ['admin', 'warden'] },
     { name: 'Complaints', path: '/complaints', icon: <HiExclamation />, roles: ['admin', 'student', 'warden'] },
-    { name: 'Fees', path: '/fees', icon: <HiCurrencyDollar />, roles: ['admin', 'student'] },
+    { name: 'Fees', path: '/fees', icon: <HiCurrencyRupee />, roles: ['admin', 'student', 'warden'] },
     { name: 'Leave', path: '/leaves', icon: <HiClipboardList />, roles: ['admin', 'student', 'warden'] },
-    { name: 'Cleaning', path: '/housekeeper', icon: <HiOutlineCube />, roles: ['housekeeper'] },
+
     { name: 'Duty Roster', path: '/security', icon: <HiShieldCheck />, roles: ['security'] },
-    { name: 'Campus Alerts', path: '/security-alerts', icon: <HiLightningBolt />, roles: ['admin'] },
-    { name: 'Student Feedback', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin', 'warden'] },
+
+    { name: 'Direct Messages', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin', 'warden'] },
     { name: 'Admin Support', path: '/student-support', icon: <HiChatAlt2 />, roles: ['student'] },
   ];
 
@@ -60,9 +76,19 @@ const Sidebar = () => {
               flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200
               ${isActive ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:bg-white/5 hover:text-slate-200'}
             `}
+            onClick={() => {
+              if (item.name === 'Direct Messages' || item.name === 'Admin Support') {
+                setUnreadCount(0);
+              }
+            }}
           >
             <span className="text-xl">{item.icon}</span>
-            <span className="font-medium text-sm">{item.name}</span>
+            <span className="font-medium text-sm flex-1">{item.name}</span>
+            {(item.name === 'Direct Messages' || item.name === 'Admin Support') && unreadCount > 0 && (
+              <span className="bg-rose-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
+                {unreadCount} New
+              </span>
+            )}
           </NavLink>
         ))}
       </nav>

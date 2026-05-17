@@ -49,4 +49,41 @@ exports.getMyMessages = async (req, res, next) => {
   }
 };
 
+// @desc    Get unread messages count
+// @route   GET /api/messages/unread-count
+exports.getUnreadCount = async (req, res, next) => {
+  try {
+    const { role, id } = req.user;
+    let count = 0;
+    
+    if (role === 'admin' || role === 'warden') {
+      const [rows] = await db.query('SELECT COUNT(*) as count FROM private_messages WHERE recipient_role = ? AND is_read = FALSE', [role]);
+      count = rows[0].count;
+    } else {
+      const [rows] = await db.query('SELECT COUNT(*) as count FROM private_messages WHERE recipient_id = ? AND is_read = FALSE', [id]);
+      count = rows[0].count;
+    }
+    
+    res.json({ success: true, count });
+  } catch (error) {
+    next(error);
+  }
+};
 
+// @desc    Mark messages as read
+// @route   PUT /api/messages/mark-read
+exports.markAsRead = async (req, res, next) => {
+  try {
+    const { role, id } = req.user;
+    
+    if (role === 'admin' || role === 'warden') {
+      await db.query('UPDATE private_messages SET is_read = TRUE WHERE recipient_role = ? AND is_read = FALSE', [role]);
+    } else {
+      await db.query('UPDATE private_messages SET is_read = TRUE WHERE recipient_id = ? AND is_read = FALSE', [id]);
+    }
+    
+    res.json({ success: true, message: 'Messages marked as read' });
+  } catch (error) {
+    next(error);
+  }
+};

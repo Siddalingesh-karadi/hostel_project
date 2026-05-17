@@ -5,10 +5,11 @@ const { db } = require('../config/db');
 exports.getAllComplaints = async (req, res, next) => {
   try {
     const [rows] = await db.query(`
-      SELECT complaints.*, students.phone, users.name 
+      SELECT complaints.*, students.phone, users.name, rooms.room_number, rooms.block as hostel_name 
       FROM complaints 
       JOIN students ON complaints.student_id = students.student_id
       JOIN users ON students.user_id = users.id
+      LEFT JOIN rooms ON students.room_id = rooms.room_id
       ORDER BY complaints.created_at DESC
     `);
     res.json({ success: true, count: rows.length, data: rows });

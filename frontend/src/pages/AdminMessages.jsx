@@ -36,6 +36,7 @@ const AdminMessages = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(response.data.data);
+      await axios.put('/api/messages/mark-read', {}, { headers: { Authorization: `Bearer ${token}` } });
     } catch (err) {
       console.error('Failed to fetch messages');
     } finally {
@@ -53,7 +54,7 @@ const AdminMessages = () => {
     <div className="p-8 bg-slate-950 min-h-screen text-slate-100">
       <div className="max-w-6xl mx-auto">
         <header className="mb-10">
-          <h1 className="text-3xl font-bold text-white mb-2">Student Feedback & Inbox</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Direct Messages & Communications</h1>
           <p className="text-slate-400">Private messages sent directly to your {user.role} account.</p>
         </header>
 

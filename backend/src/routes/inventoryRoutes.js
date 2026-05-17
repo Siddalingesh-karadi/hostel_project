@@ -4,8 +4,8 @@ const { getInventory, updateInventory, deleteInventory } = require('../controlle
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 // Equipment management is for admin
-router.get('/', protect, authorize('admin'), getInventory);
-router.post('/', protect, authorize('admin'), updateInventory);
-router.delete('/:id', protect, authorize('admin'), deleteInventory);
+router.get('/', protect, authorize('admin', 'warden'), getInventory);
+router.post('/', protect, authorize('warden'), updateInventory);
+router.delete('/:id', protect, authorize('warden'), deleteInventory);
 
 module.exports = router;

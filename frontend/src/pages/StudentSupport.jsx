@@ -16,6 +16,7 @@ const StudentSupport = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setReplies(response.data.data);
+      await axios.put('/api/messages/mark-read', {}, { headers: { Authorization: `Bearer ${token}` } });
     } catch (err) {
       console.error('Failed to fetch replies');
     } finally {

@@ -100,9 +100,10 @@ const Register = () => {
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                 className="block w-full pl-10 pr-3 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none"
               >
-                <option value="student" className="bg-slate-900">Student</option>
-                <option value="warden" className="bg-slate-900">Warden</option>
-                <option value="admin" className="bg-slate-900">Administrator</option>
+                <option value="student" className="bg-slate-900 text-white">Student</option>
+                <option value="warden" className="bg-slate-900 text-white">Warden</option>
+                <option value="security" className="bg-slate-900 text-white">Security</option>
+                <option value="admin" className="bg-slate-900 text-white">Administrator</option>
               </select>
             </div>
           </div>

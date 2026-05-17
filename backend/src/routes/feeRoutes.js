@@ -4,15 +4,20 @@ const {
   getAllFees, 
   getMyFees, 
   createFee, 
-  updateFee 
+  updateFee,
+  getDeadline,
+  updateDeadline
 } = require('../controllers/feeController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 router.use(protect);
 
-router.get('/', authorize('admin'), getAllFees);
+router.get('/deadline', getDeadline);
+router.put('/deadline', authorize('admin'), updateDeadline);
+
+router.get('/', authorize('admin', 'warden'), getAllFees);
 router.get('/my', getMyFees);
-router.post('/', authorize('admin'), createFee);
-router.put('/:id', authorize('admin'), updateFee);
+router.post('/', authorize('warden'), createFee);
+router.put('/:id', authorize('warden', 'student'), updateFee);
 
 module.exports = router;

@@ -56,8 +56,8 @@ const Inventory = () => {
     }
   };
 
-  if (user.role !== 'admin') {
-    return <div className="p-8 text-white">Access Denied. Admins only.</div>;
+  if (user.role !== 'admin' && user.role !== 'warden') {
+    return <div className="p-8 text-white">Access Denied. Admins and Wardens only.</div>;
   }
 
   return (
@@ -67,12 +67,14 @@ const Inventory = () => {
           <h1 className="text-3xl font-bold text-white mb-2 text-glow">Store Room Inventory</h1>
           <p className="text-slate-400">Track equipment like bulbs, fans, taps, and other necessary items.</p>
         </div>
-        <button 
-          onClick={() => { setEditingItem(null); setFormData({ name: '', quantity: 0, description: '' }); setShowModal(true); }}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
-        >
-          <HiOutlinePlus className="text-xl" /> Add Item
-        </button>
+        {user.role === 'warden' && (
+          <button 
+            onClick={() => { setEditingItem(null); setFormData({ name: '', quantity: 0, description: '' }); setShowModal(true); }}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/20"
+          >
+            <HiOutlinePlus className="text-xl" /> Add Item
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -86,20 +88,22 @@ const Inventory = () => {
                   <div className="p-3 rounded-lg bg-emerald-500/10 text-emerald-500">
                     <HiOutlineCube className="text-2xl" />
                   </div>
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => { setFormData(item); setShowModal(true); }}
-                      className="p-2 text-slate-500 hover:text-white transition-colors"
-                    >
-                      <HiOutlinePencilAlt />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(item.id)}
-                      className="p-2 text-slate-500 hover:text-rose-500 transition-colors"
-                    >
-                      <HiOutlineTrash />
-                    </button>
-                  </div>
+                  {user.role === 'warden' && (
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => { setFormData(item); setShowModal(true); }}
+                        className="p-2 text-slate-500 hover:text-white transition-colors"
+                      >
+                        <HiOutlinePencilAlt />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(item.id)}
+                        className="p-2 text-slate-500 hover:text-rose-500 transition-colors"
+                      >
+                        <HiOutlineTrash />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <h3 className="text-xl font-bold text-white mb-1">{item.name}</h3>
                 <p className="text-slate-400 text-sm mb-4">{item.description || 'No description provided.'}</p>

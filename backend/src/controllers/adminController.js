@@ -8,7 +8,7 @@ exports.getAllUsers = async (req, res, next) => {
     const [users] = await db.query(`
       SELECT id, name, email, role, created_at 
       FROM users 
-      WHERE role IN ('warden', 'housekeeper', 'security')
+      WHERE role IN ('warden', 'security')
     `);
 
     const [students] = await db.query(`
