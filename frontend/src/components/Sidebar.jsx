@@ -46,6 +46,7 @@ const Sidebar = () => {
     { name: 'Inventory', path: '/inventory', icon: <HiOutlineCube />, roles: ['admin', 'warden'] },
     { name: 'Community', path: '/staff', icon: <HiOutlineUserGroup />, roles: ['admin'] },
     { name: 'Students', path: '/students', icon: <HiUserGroup />, roles: ['admin', 'warden'] },
+    { name: 'Attendance', path: '/attendance', icon: <HiClipboardList />, roles: ['admin', 'warden'] },
     { name: 'Rooms', path: '/rooms', icon: <HiOfficeBuilding />, roles: ['admin', 'warden'] },
     { name: 'Complaints', path: '/complaints', icon: <HiExclamation />, roles: ['admin', 'student', 'warden'] },
     { name: 'Fees', path: '/fees', icon: <HiCurrencyRupee />, roles: ['admin', 'student', 'warden'] },

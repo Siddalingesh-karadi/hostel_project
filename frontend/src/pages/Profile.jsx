@@ -121,11 +121,11 @@ const Profile = () => {
                 <h3 className="text-sm font-black uppercase tracking-widest text-white">Academic Status</h3>
               </div>
               <div className="space-y-4">
-                <InfoItem label="Course" value={profile.course} />
-                <InfoItem label="Branch" value={profile.branch} />
-                <InfoItem label="Semester" value={`${profile.semester} Sem`} />
-                <InfoItem label="USN" value={profile.usn} />
-                <InfoItem label="Current Year" value={`${profile.year} Year`} />
+                <InfoItem label="Course" value={profile.course || 'N/A'} />
+                <InfoItem label="Branch" value={profile.branch || 'N/A'} />
+                <InfoItem label="Semester" value={profile.semester ? `${profile.semester} Sem` : 'N/A'} />
+                <InfoItem label="USN" value={profile.usn || 'STU-PENDING'} />
+                <InfoItem label="Current Year" value={profile.year ? `${profile.year} Year` : 'N/A'} />
               </div>
             </div>
 

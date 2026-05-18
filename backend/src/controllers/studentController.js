@@ -155,7 +155,7 @@ exports.deleteStudent = async (req, res, next) => {
 // @route   GET /api/students/me
 exports.getMyProfile = async (req, res, next) => {
   try {
-    const [student] = await db.query(
+    let [student] = await db.query(
       `SELECT s.*, u.name, u.email, r.room_number, r.block 
        FROM students s 
        JOIN users u ON s.user_id = u.id 
@@ -163,6 +163,26 @@ exports.getMyProfile = async (req, res, next) => {
        WHERE s.user_id = ?`,
       [req.user.id]
     );
+
+    if (student.length === 0) {
+      // Auto-heal: check if the user exists and is a student
+      const [userRows] = await db.query('SELECT * FROM users WHERE id = ? AND role = "student"', [req.user.id]);
+      if (userRows.length > 0) {
+        // Auto-create student profile record
+        await db.query('INSERT INTO students (user_id) VALUES (?)', [req.user.id]);
+        
+        // Re-fetch the profile
+        const [newStudent] = await db.query(
+          `SELECT s.*, u.name, u.email, r.room_number, r.block 
+           FROM students s 
+           JOIN users u ON s.user_id = u.id 
+           LEFT JOIN rooms r ON s.room_id = r.room_id 
+           WHERE s.user_id = ?`,
+          [req.user.id]
+        );
+        student = newStudent;
+      }
+    }
 
     if (student.length === 0) {
       return res.status(404).json({ success: false, message: 'Profile not found' });

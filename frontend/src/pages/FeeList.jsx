@@ -146,18 +146,20 @@ const FeeList = () => {
           </div>
         )}
 
-        <div className="flex justify-between items-center mb-6">
-          <div className="relative max-w-sm w-full">
-            <input 
-              type="text" 
-              placeholder="Search by student name or status..." 
-              className="w-full bg-white/5 border border-white/10 rounded-xl p-3 pl-10 text-white outline-none focus:border-indigo-500 transition-all shadow-lg"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg" />
+        {user.role !== 'student' && (
+          <div className="flex justify-between items-center mb-6">
+            <div className="relative max-w-sm w-full">
+              <input 
+                type="text" 
+                placeholder="Search by student name or status..." 
+                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 pl-10 text-white outline-none focus:border-indigo-500 transition-all shadow-lg"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg" />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="glass-card overflow-hidden">
           <table className="w-full text-left">

@@ -28,6 +28,7 @@ const StudentNetwork = () => {
   const filteredStudents = students.filter(s => 
     s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.branch?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    s.block?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (s.usn && s.usn.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
@@ -42,7 +43,7 @@ const StudentNetwork = () => {
           <div className="relative max-w-md w-full">
             <input 
               type="text" 
-              placeholder="Search by name, branch, or USN..." 
+              placeholder="Search by name, branch, block or USN..." 
               className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 text-white focus:border-indigo-500 outline-none transition-all shadow-lg"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -76,9 +77,11 @@ const StudentNetwork = () => {
                   </div>
                   <div className="p-3 bg-white/5 rounded-xl">
                     <p className="text-[10px] font-black uppercase text-slate-500 mb-1 flex items-center gap-1">
-                      <HiLocationMarker className="text-indigo-400" /> Room
+                      <HiLocationMarker className="text-indigo-400" /> Room & Block
                     </p>
-                    <p className="text-sm font-bold text-white">{student.room_number || 'N/A'}</p>
+                    <p className="text-sm font-bold text-white">
+                      {student.room_number ? `${student.room_number} (${student.block?.includes('Block') ? student.block : `${student.block || ''} Block`})` : 'N/A'}
+                    </p>
                   </div>
                 </div>
 

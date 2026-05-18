@@ -12,6 +12,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import StudentList from './pages/StudentList';
+import StudentAttendance from './pages/StudentAttendance';
 import RoomList from './pages/RoomList';
 import ComplaintList from './pages/ComplaintList';
 import FeeList from './pages/FeeList';
@@ -41,6 +42,7 @@ const App = () => {
         <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/students" element={<ProtectedRoute><Layout><StudentList /></Layout></ProtectedRoute>} />
+        <Route path="/attendance" element={<ProtectedRoute><Layout><StudentAttendance /></Layout></ProtectedRoute>} />
         <Route path="/rooms" element={<ProtectedRoute><Layout><RoomList /></Layout></ProtectedRoute>} />
         <Route path="/complaints" element={<ProtectedRoute><Layout><ComplaintList /></Layout></ProtectedRoute>} />
         <Route path="/fees" element={<ProtectedRoute><Layout><FeeList /></Layout></ProtectedRoute>} />

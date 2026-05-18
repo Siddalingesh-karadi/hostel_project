@@ -244,6 +244,22 @@ const updateDatabase = async () => {
       await db.query('ALTER TABLE students ADD COLUMN semester INT AFTER usn');
     } catch (e) { /* ignore */ }
 
+    // 4k. Create student_attendance table
+    console.log('Creating student_attendance table...');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS student_attendance (
+        attendance_id INT PRIMARY KEY AUTO_INCREMENT,
+        student_id INT NOT NULL,
+        status ENUM('present', 'absent', 'on_leave') NOT NULL,
+        date DATE NOT NULL,
+        marked_by INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+        FOREIGN KEY (marked_by) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE KEY unique_student_date (student_id, date)
+      )
+    `);
+
     // Seed profiles for existing staff
     console.log('Seeding staff profiles...');
     const [staffUsers] = await db.query('SELECT id, role FROM users WHERE role IN ("warden", "admin", "housekeeper", "security")');

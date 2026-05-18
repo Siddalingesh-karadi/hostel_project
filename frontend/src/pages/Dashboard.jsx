@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [myFeeDetails, setMyFeeDetails] = useState(null);
   const [myLeaveDetails, setMyLeaveDetails] = useState(null);
+  const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [showAllNotifications, setShowAllNotifications] = useState(false);
 
 
@@ -90,6 +91,9 @@ const Dashboard = () => {
           setMyLeaveDetails(activeLeave || leaveRes.data.data[0]);
           if (activeLeave) setLeaveStatus('On Leave');
 
+          // Fetch Attendance History
+          const attRes = await axios.get('/api/attendance/student-history', { headers });
+          setAttendanceHistory(attRes.data.data);
         } catch (err) {
           console.error('Failed to fetch student data');
         }
@@ -275,11 +279,13 @@ const Dashboard = () => {
         </div>
         <div 
           onClick={() => setShowLeaveModal(true)}
-          className="glass-card p-8 border-t-4 border-amber-500 cursor-pointer hover:bg-white/5 transition-all"
+          className="glass-card p-8 border-t-4 border-amber-500 cursor-pointer hover:bg-white/5 hover:scale-[1.02] shadow-lg hover:shadow-amber-500/5 duration-300 transition-all"
         >
-          <h3 className="text-slate-400 uppercase text-xs font-black tracking-widest mb-4">Leave Status</h3>
+          <h3 className="text-slate-400 uppercase text-xs font-black tracking-widest mb-4">Attendance & Leave</h3>
           <p className="text-3xl font-bold text-white">{leaveStatus}</p>
-          <p className="text-slate-500 text-sm mt-2">Check absence details</p>
+          <p className="text-slate-500 text-sm mt-2">
+            {attendanceHistory.length > 0 ? `${Math.round((attendanceHistory.filter(h => h.status === 'present').length / attendanceHistory.length) * 100)}% Attendance Rate` : 'Check absence details'}
+          </p>
         </div>
 
       </div>
@@ -345,35 +351,84 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Leave Details Modal */}
+      {/* Attendance & Leave Details Modal */}
       {showLeaveModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-md p-8 border-amber-500/30 border-2">
-            <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-              <HiOutlineCalendar className="text-amber-500" /> Absence Details
+          <div className="bg-[#0f0f13] border-2 border-amber-500/30 w-full max-w-lg rounded-[2.5rem] p-8 max-h-[85vh] overflow-y-auto shadow-2xl">
+            <h2 className="text-2xl font-black text-white mb-2 flex items-center gap-2">
+              <HiOutlineCalendar className="text-amber-500 text-2xl" /> Attendance & Leave Portal
             </h2>
-            {myLeaveDetails ? (
-              <div className="space-y-6">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-center">
-                  <p className="text-xs text-slate-500 uppercase font-black mb-1">Total Days Absent</p>
-                  <p className="text-4xl font-black text-white">
-                    {Math.ceil((new Date(myLeaveDetails.to_date) - new Date(myLeaveDetails.from_date)) / (1000 * 60 * 60 * 24)) + 1} Days
-                  </p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <p className="text-xs text-slate-500 uppercase font-black mb-1">Leave Period</p>
-                  <p className="text-white font-bold">
-                    {new Date(myLeaveDetails.from_date).toLocaleDateString()} - {new Date(myLeaveDetails.to_date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  <p className="text-[10px] text-emerald-400 font-black uppercase">Current Status: {myLeaveDetails.status}</p>
+            <p className="text-xs uppercase font-black text-slate-500 tracking-widest mb-6">Your official daily attendance and approved leaves</p>
+            
+            {/* Stat Counters */}
+            <div className="grid grid-cols-3 gap-3 mb-6">
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                <p className="text-[10px] uppercase font-black text-slate-500">Present</p>
+                <p className="text-2xl font-bold text-emerald-400 mt-1">{attendanceHistory.filter(h => h.status === 'present').length}</p>
+              </div>
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                <p className="text-[10px] uppercase font-black text-slate-500">Absent</p>
+                <p className="text-2xl font-bold text-rose-400 mt-1">{attendanceHistory.filter(h => h.status === 'absent').length}</p>
+              </div>
+              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 text-center">
+                <p className="text-[10px] uppercase font-black text-slate-500">Rate</p>
+                <p className="text-2xl font-bold text-indigo-400 mt-1">
+                  {attendanceHistory.length > 0 ? `${Math.round((attendanceHistory.filter(h => h.status === 'present').length / attendanceHistory.length) * 100)}%` : '0%'}
+                </p>
+              </div>
+            </div>
+
+            {/* Leave Details Block */}
+            {myLeaveDetails && (
+              <div className="mb-6 p-5 bg-white/5 border border-white/10 rounded-2xl">
+                <h4 className="text-sm font-black text-white uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <span className="w-1.5 h-3.5 bg-amber-500 rounded-full"></span> Active Leave Status
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-xs">
+                  <div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase">Leave Period</p>
+                    <p className="text-white font-bold mt-0.5">
+                      {new Date(myLeaveDetails.from_date).toLocaleDateString()} - {new Date(myLeaveDetails.to_date).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase">Reason / Destination</p>
+                    <p className="text-white font-bold mt-0.5 truncate">{myLeaveDetails.reason} ({myLeaveDetails.destination || 'N/A'})</p>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <p className="text-slate-400 italic">No leave records found.</p>
             )}
-            <button onClick={() => setShowLeaveModal(false)} className="mt-8 w-full bg-amber-600 hover:bg-amber-500 text-white font-bold p-3 rounded-xl transition-all">Close</button>
+
+            {/* Daily Attendance Timeline */}
+            <div className="space-y-4">
+              <h4 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-1.5">
+                <span className="w-1.5 h-3.5 bg-indigo-500 rounded-full"></span> Roll Call History
+              </h4>
+              
+              <div className="max-h-60 overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-slate-800">
+                {attendanceHistory.length > 0 ? (
+                  attendanceHistory.map((log, i) => (
+                    <div key={i} className="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-2xl">
+                      <div>
+                        <p className="text-xs text-white font-bold">{new Date(log.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' })}</p>
+                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider mt-0.5">Marked by: {log.marked_by_name || 'System'}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${
+                        log.status === 'present' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        log.status === 'absent' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      }`}>
+                        {log.status}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-slate-500 text-xs italic py-4">No roll call logs found in the database.</p>
+                )}
+              </div>
+            </div>
+
+            <button onClick={() => setShowLeaveModal(false)} className="mt-8 w-full py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 font-bold rounded-2xl transition-all">Close</button>
           </div>
         </div>
       )}
