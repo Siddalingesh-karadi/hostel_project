@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HostelHub DBMS Viva - SQL Queries Cheat Sheet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --dark: #0f172a;
+            --gray-light: #f8fafc;
+            --gray-border: #e2e8f0;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            background-color: #f1f5f9;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.05);
+            padding: 50px;
+            border: 1px solid var(--gray-border);
+        }
+
+        header {
+            border-bottom: 2px solid var(--gray-border);
+            padding-bottom: 30px;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+
+        .badge {
+            background-color: var(--primary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .pdf-note {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            font-size: 0.95rem;
+            color: #1e3a8a;
+        }
+
+        .pdf-note strong {
+            color: #1d4ed8;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-top: 40px;
+            margin-bottom: 25px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--gray-border);
+        }
+
+        .query-card {
+            background: white;
+            border: 1px solid var(--gray-border);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            padding: 24px;
+            page-break-inside: avoid;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .query-card:hover {
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border-color: #cbd5e1;
+        }
+
+        .query-header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .query-num {
+            background: #e0e7ff;
+            color: var(--primary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .query-question {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-top: 2px;
+        }
+
+        .query-concept {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .query-code-container {
+            position: relative;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        pre {
+            background-color: var(--dark);
+            color: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border-left: 4px solid var(--primary-light);
+        }
+
+        .keyword { color: #f472b6; font-weight: 600; }
+        .string { color: #34d399; }
+        .function { color: #60a5fa; }
+        .table { color: #fbbf24; }
+        .alias { color: #c084fc; }
+
+        .query-explanation {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+
+        .output-table-container {
+            margin-top: 15px;
+            border: 1px solid var(--gray-border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .output-label {
+            background-color: #f1f5f9;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--gray-border);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+        }
+
+        .output-label::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            margin-right: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            background-color: #fafbfc;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            text-align: left;
+            padding: 8px 12px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--gray-border);
+        }
+
+        td {
+            padding: 8px 12px;
+            border-bottom: 1px dashed var(--gray-border);
+            color: #334155;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        footer {
+            margin-top: 50px;
+            border-top: 2px solid var(--gray-border);
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Print Media Styles */
+        @media print {
+            body {
+                background-color: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+            .pdf-note {
+                display: none;
+            }
+            .query-card {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+                page-break-inside: avoid;
+            }
+            pre {
+                background-color: #0f172a !important;
+                color: white !important;
+                border-left: 4px solid #4f46e5 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .keyword { color: #f472b6 !important; }
+            .string { color: #34d399 !important; }
+            .function { color: #60a5fa !important; }
+            .table { color: #fbbf24 !important; }
+            .alias { color: #c084fc !important; }
+            th {
+                background-color: #f1f5f9 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <span class="badge">DBMS Practical Exam</span>
+            <h1>HostelHub Database Query Sheet</h1>
+            <p class="subtitle">Quick reference guide containing common viva questions, database commands, and outputs</p>
+        </header>
+
+        <div class="pdf-note">
+            🚀 <strong>How to Save this as a PDF:</strong>
+            Press <strong>Ctrl + P</strong> (Windows) or <strong>Cmd + P</strong> (Mac) inside your web browser. 
+            Set the Destination to <strong>"Save as PDF"</strong>, enable "Background graphics" in options (to keep the formatting), and click <strong>Save</strong>!
+        </div>
+
+        <h2 class="section-title">🔑 Section A: Setup & Inspection Commands</h2>
+
+        <!-- Login Card -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">▶</div>
+                <div>
+                    <div class="query-question">Log in to MySQL and Select the Database</div>
+                    <div class="query-concept">Setup & Connection</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Connects to the MySQL local server as the database superuser (root) and mounts the project's schema.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">mysql</span> -u root -p
+
+<span class="keyword">USE</span> <span class="table">hostelhub</span>;
+
+<span class="keyword">SHOW</span> <span class="keyword">TABLES</span>;</pre>
+            </div>
+        </div>
+
+        <h2 class="section-title">📡 Section B: Core Queries & Join Questions</h2>
+
+        <!-- Query 1 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">1</div>
+                <div>
+                    <div class="query-question">"Show me all registered users along with their designated roles."</div>
+                    <div class="query-concept">Basic Projection & Selection</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Queries the core authenticating user records to inspect users and roles.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> id, name, email, role 
+<span class="keyword">FROM</span> <span class="table">users</span>;</pre>
+            </div>
+            <div class="output-table-container">
+                <div class="output-label">Sample Command Output</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>id</th>
+                            <th>name</th>
+                            <th>email</th>
+                            <th>role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Administrator</td>
+                            <td>administrator@hostel.com</td>
+                            <td>admin</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Warden</td>
+                            <td>warden@hostel.com</td>
+                            <td>warden</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>John Doe</td>
+                            <td>student@hostel.com</td>
+                            <td>student</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Query 2 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">2</div>
+                <div>
+                    <div class="query-question">"Can you join tables to show student profiles with their accounts?"</div>
+                    <div class="query-concept">Inner Join (2 Tables)</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Joins the <strong>users</strong> and <strong>students</strong> tables to retrieve profile records.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">s</span>.student_id, <span class="alias">u</span>.name, <span class="alias">u</span>.email, <span class="alias">s</span>.usn, <span class="alias">s</span>.course, <span class="alias">s</span>.branch 
+<span class="keyword">FROM</span> <span class="table">students</span> <span class="alias">s</span>
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">u</span> <span class="keyword">ON</span> <span class="alias">s</span>.user_id = <span class="alias">u</span>.id;</pre>
+            </div>
+            <div class="output-table-container">
+                <div class="output-label">Sample Command Output</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>student_id</th>
+                            <th>name</th>
+                            <th>email</th>
+                            <th>usn</th>
+                            <th>course</th>
+                            <th>branch</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>John Doe</td>
+                            <td>student@hostel.com</td>
+                            <td>1RV22CS045</td>
+                            <td>B.Tech</td>
+                            <td>CSE</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Query 3 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">3</div>
+                <div>
+                    <div class="query-question">"How do you inspect which rooms are currently available for allocation?"</div>
+                    <div class="query-concept">Filtering & ENUM evaluation</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Selects all available rooms.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> room_number, block, floor, capacity, occupied, status 
+<span class="keyword">FROM</span> <span class="table">rooms</span> 
+<span class="keyword">WHERE</span> status = <span class="string">'available'</span>;</pre>
+            </div>
+            <div class="output-table-container">
+                <div class="output-label">Sample Command Output</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>room_number</th>
+                            <th>block</th>
+                            <th>floor</th>
+                            <th>capacity</th>
+                            <th>occupied</th>
+                            <th>status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>101</td>
+                            <td>A</td>
+                            <td>1</td>
+                            <td>3</td>
+                            <td>1</td>
+                            <td>available</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Query 4 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">4</div>
+                <div>
+                    <div class="query-question">"Show me the name and USN of students residing in Room 101."</div>
+                    <div class="query-concept">Triple Table Join</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Joins **users**, **students**, and **rooms** to locate resident listings.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">u</span>.name, <span class="alias">s</span>.usn, <span class="alias">s</span>.course, <span class="alias">s</span>.branch, <span class="alias">r</span>.room_number
+<span class="keyword">FROM</span> <span class="table">students</span> <span class="alias">s</span>
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">u</span> <span class="keyword">ON</span> <span class="alias">s</span>.user_id = <span class="alias">u</span>.id
+<span class="keyword">JOIN</span> <span class="table">rooms</span> <span class="alias">r</span> <span class="keyword">ON</span> <span class="alias">s</span>.room_id = <span class="alias">r</span>.room_id
+<span class="keyword">WHERE</span> <span class="alias">r</span>.room_number = <span class="string">'101'</span>;</pre>
+            </div>
+            <div class="output-table-container">
+                <div class="output-label">Sample Command Output</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>name</th>
+                            <th>usn</th>
+                            <th>course</th>
+                            <th>branch</th>
+                            <th>room_number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>John Doe</td>
+                            <td>1RV22CS045</td>
+                            <td>B.Tech</td>
+                            <td>CSE</td>
+                            <td>101</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Query 5 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">5</div>
+                <div>
+                    <div class="query-question">"List all students who have pending or partial fee payments."</div>
+                    <div class="query-concept">Financial Audit & Range Selection</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Queries the **fees** ledger to identify outstanding invoices.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">f</span>.fee_id, <span class="alias">u</span>.name, <span class="alias">f</span>.amount, <span class="alias">f</span>.due_date, <span class="alias">f</span>.status 
+<span class="keyword">FROM</span> <span class="table">fees</span> <span class="alias">f</span>
+<span class="keyword">JOIN</span> <span class="table">students</span> <span class="alias">s</span> <span class="keyword">ON</span> <span class="alias">f</span>.student_id = <span class="alias">s</span>.student_id
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">u</span> <span class="keyword">ON</span> <span class="alias">s</span>.user_id = <span class="alias">u</span>.id
+<span class="keyword">WHERE</span> <span class="alias">f</span>.status <span class="keyword">IN</span> (<span class="string">'unpaid'</span>, <span class="string">'partial'</span>);</pre>
+            </div>
+            <div class="output-table-container">
+                <div class="output-label">Sample Command Output</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>fee_id</th>
+                            <th>name</th>
+                            <th>amount</th>
+                            <th>due_date</th>
+                            <th>status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>John Doe</td>
+                            <td>67000.00</td>
+                            <td>2026-06-01</td>
+                            <td>unpaid</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="section-title">📊 Section C: Advanced Aggregates & Dashboard Statistics</h2>
+
+        <!-- Query 6 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">6</div>
+                <div>
+                    <div class="query-question">"What is the total number of students registered in the hostel?"</div>
+                    <div class="query-concept">COUNT(*) Cardinality Aggregation</div>
+                </div>
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="function">COUNT</span>(*) <span class="keyword">as</span> total_students <span class="keyword">FROM</span> <span class="table">students</span>;</pre>
+            </div>
+        </div>
+
+        <!-- Query 7 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">7</div>
+                <div>
+                    <div class="query-question">"Show me the count of students Present, Absent, and On Leave today."</div>
+                    <div class="query-concept">Group By Frequency</div>
+                </div>
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> status, <span class="function">COUNT</span>(*) <span class="keyword">as</span> count 
+<span class="keyword">FROM</span> <span class="table">student_attendance</span> 
+<span class="keyword">WHERE</span> date = <span class="function">CURDATE</span>() 
+<span class="keyword">GROUP BY</span> status;</pre>
+            </div>
+        </div>
+
+        <!-- Query 8 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">8</div>
+                <div>
+                    <div class="query-question">"How many unique students have filed at least one complaint?"</div>
+                    <div class="query-concept">COUNT(DISTINCT) Field Evaluation</div>
+                </div>
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="function">COUNT</span>(<span class="keyword">DISTINCT</span> student_id) <span class="keyword">as</span> unique_students_complained 
+<span class="keyword">FROM</span> <span class="table">complaints</span>;</pre>
+            </div>
+        </div>
+
+        <!-- Query 9 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">9</div>
+                <div>
+                    <div class="query-question">"Give me the breakdown of hostel complaints grouped by their status."</div>
+                    <div class="query-concept">GROUP BY Status Frequency</div>
+                </div>
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> status, <span class="function">COUNT</span>(*) <span class="keyword">as</span> complaint_count 
+<span class="keyword">FROM</span> <span class="table">complaints</span> 
+<span class="keyword">GROUP BY</span> status;</pre>
+            </div>
+        </div>
+
+        <!-- Query 10 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">10</div>
+                <div>
+                    <div class="query-question">"How many times have notice board bulletins been published?"</div>
+                    <div class="query-concept">Standard Count</div>
+                </div>
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="function">COUNT</span>(*) <span class="keyword">as</span> total_notices_published <span class="keyword">FROM</span> <span class="table">notices</span>;</pre>
+            </div>
+        </div>
+
+        <!-- Query 11 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">11</div>
+                <div>
+                    <div class="query-question">"What is the total sum of outstanding (unpaid) fees?"</div>
+                    <div class="query-concept">SUM() Aggregation Function</div>
+                </div>
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="function">SUM</span>(amount) <span class="keyword">as</span> total_unpaid_fees 
+<span class="keyword">FROM</span> <span class="table">fees</span> 
+<span class="keyword">WHERE</span> status = <span class="string">'unpaid'</span>;</pre>
+            </div>
+        </div>
+
+        <h2 class="section-title">🧠 Section D: The Examiner's Advanced Audit Queries</h2>
+
+        <!-- Query 12 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">12</div>
+                <div>
+                    <div class="query-question">"Prove that your database has absolute Referential Integrity and contains no orphaned student records (i.e. students without a user)."</div>
+                    <div class="query-concept">Outer Join (LEFT JOIN) filtering for NULL pointers</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                A LEFT JOIN retrieves all students. If any student has NO corresponding account in the users table, users.id will be NULL. The result should be 0 rows, proving 100% referential integrity!
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">s</span>.student_id, <span class="alias">s</span>.usn 
+<span class="keyword">FROM</span> <span class="table">students</span> <span class="alias">s</span> 
+<span class="keyword">LEFT JOIN</span> <span class="table">users</span> <span class="alias">u</span> <span class="keyword">ON</span> <span class="alias">s</span>.user_id = <span class="alias">u</span>.id 
+<span class="keyword">WHERE</span> <span class="alias">u</span>.id <span class="keyword">IS NULL</span>;</pre>
+            </div>
+        </div>
+
+        <!-- Query 13 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">13</div>
+                <div>
+                    <div class="query-question">"Write a Nested Subquery to find students with fees higher than the average fee."</div>
+                    <div class="query-concept">Non-Correlated Subquery & Selection Comparison</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                The nested inner query computes the average fee amount. The outer query dynamically filters students whose outstanding invoice exceeds this benchmark.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">u</span>.name, <span class="alias">s</span>.usn, <span class="alias">f</span>.amount
+<span class="keyword">FROM</span> <span class="table">students</span> <span class="alias">s</span>
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">u</span> <span class="keyword">ON</span> <span class="alias">s</span>.user_id = <span class="alias">u</span>.id
+<span class="keyword">JOIN</span> <span class="table">fees</span> <span class="alias">f</span> <span class="keyword">ON</span> <span class="alias">s</span>.student_id = <span class="alias">f</span>.student_id
+<span class="keyword">WHERE</span> <span class="alias">f</span>.amount > (<span class="keyword">SELECT</span> <span class="function">AVG</span>(amount) <span class="keyword">FROM</span> <span class="table">fees</span>);</pre>
+            </div>
+        </div>
+
+        <!-- Query 14 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">14</div>
+                <div>
+                    <div class="query-question">"Audit private messages showing both sender and recipient names."</div>
+                    <div class="query-concept">Double Join on the Same Table (Aliases)</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Both sender and recipient IDs link back to users.id. Joining the users table twice under unique aliases allows showing sender and recipient names side-by-side.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">m</span>.message_id, <span class="alias">sender</span>.name <span class="keyword">as</span> sender_name, <span class="alias">recipient</span>.name <span class="keyword">as</span> recipient_name, <span class="alias">m</span>.content 
+<span class="keyword">FROM</span> <span class="table">private_messages</span> <span class="alias">m</span>
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">sender</span> <span class="keyword">ON</span> <span class="alias">m</span>.sender_id = <span class="alias">sender</span>.id
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">recipient</span> <span class="keyword">ON</span> <span class="alias">m</span>.recipient_id = <span class="alias">recipient</span>.id
+<span class="keyword">ORDER BY</span> <span class="alias">m</span>.created_at <span class="keyword">DESC</span>;</pre>
+            </div>
+        </div>
+
+        <!-- Query 15 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">15</div>
+                <div>
+                    <div class="query-question">"Show me which rooms currently have bed vacancies."</div>
+                    <div class="query-concept">Attribute Comparison Logic</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Compares the current occupied counter against capacity, calculating the remaining open slots.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> room_number, block, floor, capacity, occupied, (capacity - occupied) <span class="keyword">as</span> vacant_beds 
+<span class="keyword">FROM</span> <span class="table">rooms</span> 
+<span class="keyword">WHERE</span> occupied &lt; capacity;</pre>
+            </div>
+        </div>
+
+        <!-- Query 16 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">16</div>
+                <div>
+                    <div class="query-question">"What is the average outstanding fee balance grouped by study branch?"</div>
+                    <div class="query-concept">Joins Coupled with GROUP BY Aggregation</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Groups outstanding fee records by study branches to display demographic summaries.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">s</span>.branch, <span class="function">COUNT</span>(<span class="alias">s</span>.student_id) <span class="keyword">as</span> student_count, <span class="function">ROUND</span>(<span class="function">AVG</span>(<span class="alias">f</span>.amount), 2) <span class="keyword">as</span> avg_outstanding_fee
+<span class="keyword">FROM</span> <span class="table">students</span> <span class="alias">s</span>
+<span class="keyword">JOIN</span> <span class="table">fees</span> <span class="alias">f</span> <span class="keyword">ON</span> <span class="alias">s</span>.student_id = <span class="alias">f</span>.student_id
+<span class="keyword">WHERE</span> <span class="alias">f</span>.status = <span class="string">'unpaid'</span>
+<span class="keyword">GROUP BY</span> <span class="alias">s</span>.branch;</pre>
+            </div>
+        </div>
+
+        <!-- Query 17 -->
+        <div class="query-card">
+            <div class="query-header">
+                <div class="query-num">17</div>
+                <div>
+                    <div class="query-question">"Provide a complete attendance audit log showing the student, date, status, and the staff member who marked it."</div>
+                    <div class="query-concept">Double Join to Audit Accountability</div>
+                </div>
+            </div>
+            <div class="query-explanation">
+                Joins users twice: once for the student name and once for the staff name, tracking marking records.
+            </div>
+            <div class="query-code-container">
+<pre><span class="keyword">SELECT</span> <span class="alias">sa</span>.date, <span class="alias">u</span>.name <span class="keyword">as</span> student_name, <span class="alias">sa</span>.status, <span class="alias">staff</span>.name <span class="keyword">as</span> marked_by_staff, <span class="alias">staff</span>.role <span class="keyword">as</span> staff_role
+<span class="keyword">FROM</span> <span class="table">student_attendance</span> <span class="alias">sa</span>
+<span class="keyword">JOIN</span> <span class="table">students</span> <span class="alias">s</span> <span class="keyword">ON</span> <span class="alias">sa</span>.student_id = <span class="alias">s</span>.student_id
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">u</span> <span class="keyword">ON</span> <span class="alias">s</span>.user_id = <span class="alias">u</span>.id
+<span class="keyword">JOIN</span> <span class="table">users</span> <span class="alias">staff</span> <span class="keyword">ON</span> <span class="alias">sa</span>.marked_by = <span class="alias">staff</span>.id
+<span class="keyword">ORDER BY</span> <span class="alias">sa</span>.date <span class="keyword">DESC</span>;</pre>
+            </div>
+        </div>
+
+        <footer>
+            <p>HostelHub DBMS Project &copy; 2026. Made for Siddalingesh Karadi's Academic Presentation.</p>
+        </footer>
+    </div>
+</body>
+</html>
