@@ -115,20 +115,6 @@ const updateDatabase = async () => {
       )
     `);
 
-    // 4e. Create cleaning tasks table
-    console.log('Creating cleaning tasks table...');
-    await db.query(`
-      CREATE TABLE IF NOT EXISTS cleaning_tasks (
-        task_id INT PRIMARY KEY AUTO_INCREMENT,
-        housekeeper_id INT NOT NULL,
-        room_id INT NOT NULL,
-        status ENUM('pending', 'completed') DEFAULT 'pending',
-        task_date DATE NOT NULL,
-        completed_at DATETIME DEFAULT NULL,
-        FOREIGN KEY (housekeeper_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE CASCADE
-      )
-    `);
     // Seed mess menu if empty
     const [menuRows] = await db.query('SELECT COUNT(*) as count FROM mess_menu');
     if (menuRows[0].count === 0) {
