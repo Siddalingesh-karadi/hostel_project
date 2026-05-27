@@ -193,3 +193,48 @@ exports.getMyProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Mark student as left hostel and deallocate room
+// @route   PUT /api/students/:id/left
+exports.markStudentAsLeft = async (req, res, next) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+
+    // 1. Get the student's current room_id
+    const [studentRows] = await conn.query('SELECT room_id, status FROM students WHERE student_id = ? FOR UPDATE', [req.params.id]);
+    if (studentRows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ success: false, message: 'Student not found' });
+    }
+
+    const student = studentRows[0];
+    if (student.status === 'left') {
+      await conn.rollback();
+      return res.status(400).json({ success: false, message: 'Student has already been marked as left' });
+    }
+
+    const roomId = student.room_id;
+
+    // 2. Update student status to 'left' and room_id to NULL
+    await conn.query('UPDATE students SET status = "left", room_id = NULL WHERE student_id = ?', [req.params.id]);
+
+    // 3. If student had a room allocated, decrement room occupancy
+    if (roomId) {
+      const [rooms] = await conn.query('SELECT * FROM rooms WHERE room_id = ? FOR UPDATE', [roomId]);
+      if (rooms.length > 0) {
+        const newOccupied = Math.max(0, rooms[0].occupied - 1);
+        const newStatus = newOccupied === rooms[0].capacity ? 'full' : 'available';
+        await conn.query('UPDATE rooms SET occupied = ?, status = ? WHERE room_id = ?', [newOccupied, newStatus, roomId]);
+      }
+    }
+
+    await conn.commit();
+    res.json({ success: true, message: 'Student marked as left and room deallocated successfully' });
+  } catch (error) {
+    await conn.rollback();
+    next(error);
+  } finally {
+    conn.release();
+  }
+};

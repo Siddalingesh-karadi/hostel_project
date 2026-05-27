@@ -158,13 +158,12 @@ const StaffList = () => {
               <div>
                 <label className="text-[10px] font-black uppercase text-slate-500 mb-2 block">Role</label>
                 <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-indigo-500 [color-scheme:dark]"
                   value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
                 >
-                  <option value="student">Student</option>
-                  <option value="warden">Warden</option>
-
-                  <option value="security">Security</option>
+                  <option value="student" className="bg-slate-900 text-white">Student</option>
+                  <option value="warden" className="bg-slate-900 text-white">Warden</option>
+                  <option value="security" className="bg-slate-900 text-white">Security</option>
                 </select>
               </div>
               <div className="flex gap-4 pt-4">

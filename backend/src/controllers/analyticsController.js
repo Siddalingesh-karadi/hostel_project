@@ -4,8 +4,11 @@ const { db } = require('../config/db');
 // @route   GET /api/analytics/stats
 exports.getStats = async (req, res, next) => {
   try {
-    // 1. Total Students
-    const [students] = await db.query('SELECT COUNT(*) as count FROM students');
+    // 1. Total Active Students
+    const [students] = await db.query('SELECT COUNT(*) as count FROM students WHERE status = "active"');
+    
+    // 1b. Total Students Left Hostel
+    const [leftStudents] = await db.query('SELECT COUNT(*) as count FROM students WHERE status = "left"');
     
     // 2. Room Occupancy
     const [rooms] = await db.query('SELECT SUM(occupied) as occupied, SUM(capacity) as capacity FROM rooms');
@@ -74,6 +77,7 @@ exports.getStats = async (req, res, next) => {
       success: true,
       data: {
         totalStudents: students[0].count,
+        leftStudents: leftStudents[0].count,
         occupancy: `${rooms[0].occupied || 0}/${rooms[0].capacity || 0}`,
         pendingComplaints: complaints[0].count,
         unpaidFees: fees[0].total || 0,

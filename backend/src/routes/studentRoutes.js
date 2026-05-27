@@ -6,7 +6,8 @@ const {
   createStudent, 
   updateStudent, 
   deleteStudent,
-  getMyProfile
+  getMyProfile,
+  markStudentAsLeft
 } = require('../controllers/studentController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -18,6 +19,7 @@ router.get('/', protect, authorize('admin', 'warden', 'student'), getAllStudents
 router.get('/:id', getStudentById); // Students can see their own profile
 router.post('/', authorize('admin', 'warden'), createStudent);
 router.put('/:id', authorize('admin', 'warden'), updateStudent);
+router.put('/:id/left', authorize('admin', 'warden'), markStudentAsLeft);
 router.delete('/:id', authorize('admin'), deleteStudent);
 
 module.exports = router;

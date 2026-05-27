@@ -242,6 +242,7 @@ const updateDatabase = async () => {
     try {
       await db.query('ALTER TABLE students ADD COLUMN usn VARCHAR(20) UNIQUE AFTER room_id');
       await db.query('ALTER TABLE students ADD COLUMN semester INT AFTER usn');
+      await db.query("ALTER TABLE students ADD COLUMN status ENUM('active', 'left') DEFAULT 'active'");
     } catch (e) { /* ignore */ }
 
     // 4k. Create student_attendance table
@@ -259,6 +260,24 @@ const updateDatabase = async () => {
         UNIQUE KEY unique_student_date (student_id, date)
       )
     `);
+
+    // 4l. Create fee_payment_requests table
+    console.log('Creating fee_payment_requests table...');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS fee_payment_requests (
+        request_id INT PRIMARY KEY AUTO_INCREMENT,
+        fee_id INT NOT NULL,
+        student_id INT NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        transaction_id VARCHAR(100) NOT NULL,
+        status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+        remarks VARCHAR(255) NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (fee_id) REFERENCES fees(fee_id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
+      )
+    `);
+
 
     // Seed profiles for existing staff
     console.log('Seeding staff profiles...');

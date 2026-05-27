@@ -21,6 +21,9 @@ const FeeList = () => {
   
   const [formData, setFormData] = useState({ student_id: '', amount: '', due_date: '' });
   const [payAmount, setPayAmount] = useState('');
+  const [transactionId, setTransactionId] = useState('');
+  const [paymentRequests, setPaymentRequests] = useState([]);
+  const [activeTab, setActiveTab] = useState('fees');
   
   const TOTAL_HOSTEL_FEE = 67000;
 
@@ -46,16 +49,20 @@ const FeeList = () => {
     try {
       const token = localStorage.getItem('token');
       const endpoint = user.role === 'student' ? '/api/fees/my' : '/api/fees';
-      const [feesRes, studentsRes, deadlineRes] = await Promise.all([
+      const requestsEndpoint = user.role === 'student' ? '/api/fees/payment-requests/my' : '/api/fees/payment-requests/all';
+      
+      const [feesRes, studentsRes, deadlineRes, requestsRes] = await Promise.all([
         axios.get(endpoint, { headers: { Authorization: `Bearer ${token}` } }),
         user.role !== 'student' ? axios.get('/api/students', { headers: { Authorization: `Bearer ${token}` } }) : Promise.resolve({ data: { data: [] } }),
-        axios.get('/api/fees/deadline', { headers: { Authorization: `Bearer ${token}` } })
+        axios.get('/api/fees/deadline', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(requestsEndpoint, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setFees(feesRes.data.data);
       setStudents(studentsRes.data.data);
       setDeadline(deadlineRes.data.deadline);
+      setPaymentRequests(requestsRes.data.data || []);
     } catch (err) {
-      console.error('Failed to fetch fee data');
+      console.error('Failed to fetch fee data', err);
     } finally {
       setLoading(false);
     }
@@ -78,14 +85,61 @@ const FeeList = () => {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const newPaidAmount = parseFloat(selectedFee.paid_amount || 0) + parseFloat(payAmount);
-      await axios.put(`/api/fees/${selectedFee.fee_id}`, { paid_amount: newPaidAmount }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      if (user.role === 'student') {
+        if (!transactionId.trim()) {
+          alert('Transaction reference ID is required');
+          return;
+        }
+        await axios.post(`/api/fees/${selectedFee.fee_id}/pay`, {
+          amount: parseFloat(payAmount),
+          transaction_id: transactionId
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert('Payment request submitted successfully for Warden approval!');
+      } else {
+        const newPaidAmount = parseFloat(selectedFee.paid_amount || 0) + parseFloat(payAmount);
+        await axios.put(`/api/fees/${selectedFee.fee_id}`, { paid_amount: newPaidAmount }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        alert('Payment recorded successfully!');
+      }
       setShowPayModal(false);
       setPayAmount('');
+      setTransactionId('');
       fetchData();
-    } catch (err) { alert('Payment failed'); }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Payment action failed');
+    }
+  };
+
+  const handleApproveRequest = async (requestId) => {
+    if (!window.confirm('Are you sure you want to approve this payment request? This will update the student\'s paid fee balance.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/fees/payment-requests/${requestId}/approve`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Payment request approved successfully!');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Approval failed');
+    }
+  };
+
+  const handleRejectRequest = async (requestId) => {
+    const remarks = window.prompt('Enter reason for rejection:');
+    if (remarks === null) return; // User cancelled
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/fees/payment-requests/${requestId}/reject`, { remarks }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Payment request rejected.');
+      fetchData();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Rejection failed');
+    }
   };
 
   const totalPaid = fees.reduce((acc, curr) => acc + parseFloat(curr.paid_amount || 0), 0);
@@ -147,6 +201,28 @@ const FeeList = () => {
         )}
 
         {user.role !== 'student' && (
+          <div className="flex gap-4 mb-6 border-b border-white/5 pb-2">
+            <button 
+              onClick={() => setActiveTab('fees')}
+              className={`px-4 py-2 font-bold text-sm transition-all rounded-lg ${activeTab === 'fees' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            >
+              Hostel Fees
+            </button>
+            <button 
+              onClick={() => setActiveTab('requests')}
+              className={`px-4 py-2 font-bold text-sm transition-all rounded-lg flex items-center gap-2 ${activeTab === 'requests' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+            >
+              Payment Requests
+              {paymentRequests.filter(r => r.status === 'pending').length > 0 && (
+                <span className="bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg shadow-rose-500/20">
+                  {paymentRequests.filter(r => r.status === 'pending').length}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
+        {user.role !== 'student' && activeTab === 'fees' && (
           <div className="flex justify-between items-center mb-6">
             <div className="relative max-w-sm w-full">
               <input 
@@ -161,69 +237,201 @@ const FeeList = () => {
           </div>
         )}
 
-        <div className="glass-card overflow-hidden">
-          <table className="w-full text-left">
-            <thead className="bg-white/5 text-slate-400 text-xs uppercase font-bold tracking-widest">
-              <tr>
-                <th className="px-6 py-4">Student Name</th>
-                <th className="px-6 py-4">Paid</th>
-                <th className="px-6 py-4">Balance</th>
-                <th className="px-6 py-4">Last Date</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {filteredFees.map(fee => {
-                const amount = parseFloat(fee.amount);
-                const paidAmt = parseFloat(fee.paid_amount || 0);
-                const balance = TOTAL_HOSTEL_FEE - paidAmt;
-                const isOverdue = new Date(fee.due_date) < new Date() && paidAmt < TOTAL_HOSTEL_FEE;
-                
-                return (
-                  <tr key={fee.fee_id} className="hover:bg-white/[0.02]">
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-white">{fee.name || 'Monthly Hostel Fee'}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-sm font-bold text-emerald-400">₹{paidAmt.toLocaleString()}</p>
-                    </td>
-                    <td className="px-6 py-4 font-bold text-rose-400">₹{balance.toLocaleString()}</td>
-                    <td className="px-6 py-4">
-                      <div className={`flex items-center gap-2 text-xs font-bold ${isOverdue ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
-                        <HiCalendar />
-                        {new Date(fee.due_date).toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
-                        fee.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
-                        fee.status === 'partial' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                        'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                      }`}>
-                        {fee.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {paidAmt < TOTAL_HOSTEL_FEE && (user.role === 'warden' || (user.role === 'student' && !isOverdue)) ? (
-                        <button 
-                          onClick={() => { setSelectedFee(fee); setShowPayModal(true); }}
-                          className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 py-2 rounded-lg text-xs font-black uppercase transition-all"
-                        >
-                          {user.role === 'student' ? 'Pay Online' : 'Record Payment'}
-                        </button>
-                      ) : (
-                        user.role === 'student' && isOverdue && paidAmt < TOTAL_HOSTEL_FEE && (
-                          <span className="text-[10px] text-rose-500 font-bold uppercase tracking-widest bg-rose-500/10 px-3 py-1 rounded-full">Overdue Locked</span>
-                        )
-                      )}
-                    </td>
+        {/* Warden/Admin Payment Requests Tab */}
+        {user.role !== 'student' && activeTab === 'requests' ? (
+          <div className="glass-card overflow-hidden">
+            <table className="w-full text-left">
+              <thead className="bg-white/5 text-slate-400 text-xs uppercase font-bold tracking-widest">
+                <tr>
+                  <th className="px-6 py-4">Student</th>
+                  <th className="px-6 py-4">Fee Details</th>
+                  <th className="px-6 py-4">Requested Amount</th>
+                  <th className="px-6 py-4">Transaction ID</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {paymentRequests.length === 0 ? (
+                  <tr>
+                    <td colSpan="7" className="px-6 py-8 text-center text-slate-500">No payment requests found.</td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ) : (
+                  paymentRequests.map(req => (
+                    <tr key={req.request_id} className="hover:bg-white/[0.02]">
+                      <td className="px-6 py-4">
+                        <p className="font-bold text-white">{req.student_name}</p>
+                        <p className="text-xs text-slate-400">{req.student_number}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-xs text-slate-400">Total: ₹{parseFloat(req.fee_total).toLocaleString()}</p>
+                        <p className="text-xs text-slate-500">Paid: ₹{parseFloat(req.fee_paid).toLocaleString()}</p>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-emerald-400">
+                        ₹{parseFloat(req.amount).toLocaleString()}
+                      </td>
+                      <td className="px-6 py-4 text-xs font-mono text-slate-300">
+                        {req.transaction_id}
+                      </td>
+                      <td className="px-6 py-4 text-xs text-slate-400">
+                        {new Date(req.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
+                          req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                          req.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                          'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {req.status}
+                        </span>
+                        {req.remarks && <p className="text-[10px] text-slate-500 mt-1 italic">Note: {req.remarks}</p>}
+                      </td>
+                      <td className="px-6 py-4">
+                        {req.status === 'pending' ? (
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleApproveRequest(req.request_id)}
+                              className="bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-emerald-500/30"
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              onClick={() => handleRejectRequest(req.request_id)}
+                              className="bg-rose-500/20 hover:bg-rose-500 text-rose-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all border border-rose-500/30"
+                            >
+                              Reject
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-500 font-medium">Processed</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          /* Fees List Tab (Warden/Admin/Student) */
+          <div className="glass-card overflow-hidden">
+            <table className="w-full text-left">
+              <thead className="bg-white/5 text-slate-400 text-xs uppercase font-bold tracking-widest">
+                <tr>
+                  <th className="px-6 py-4">Student Name</th>
+                  <th className="px-6 py-4">Paid</th>
+                  <th className="px-6 py-4">Balance</th>
+                  <th className="px-6 py-4">Last Date</th>
+                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {filteredFees.map(fee => {
+                  const amount = parseFloat(fee.amount);
+                  const paidAmt = parseFloat(fee.paid_amount || 0);
+                  const balance = TOTAL_HOSTEL_FEE - paidAmt;
+                  const isOverdue = new Date(fee.due_date) < new Date() && paidAmt < TOTAL_HOSTEL_FEE;
+                  
+                  return (
+                    <tr key={fee.fee_id} className="hover:bg-white/[0.02]">
+                      <td className="px-6 py-4">
+                        <p className="font-bold text-white">{fee.name || 'Monthly Hostel Fee'}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-bold text-emerald-400">₹{paidAmt.toLocaleString()}</p>
+                      </td>
+                      <td className="px-6 py-4 font-bold text-rose-400">₹{balance.toLocaleString()}</td>
+                      <td className="px-6 py-4">
+                        <div className={`flex items-center gap-2 text-xs font-bold ${isOverdue ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}>
+                          <HiCalendar />
+                          {new Date(fee.due_date).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
+                          fee.status === 'paid' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                          fee.status === 'partial' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                          'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                        }`}>
+                          {fee.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {paidAmt < TOTAL_HOSTEL_FEE && (user.role === 'warden' || user.role === 'student') ? (
+                          <button 
+                            onClick={() => { setSelectedFee(fee); setShowPayModal(true); }}
+                            className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 px-4 py-2 rounded-lg text-xs font-black uppercase transition-all"
+                          >
+                            {user.role === 'student' ? 'Pay Online' : 'Record Payment'}
+                          </button>
+                        ) : (
+                          user.role === 'student' && paidAmt >= TOTAL_HOSTEL_FEE && (
+                            <span className="text-[10px] text-emerald-500 font-bold uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full">Fully Paid</span>
+                          )
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Student Online Payments History */}
+        {user.role === 'student' && (
+          <div className="mt-12">
+            <h2 className="text-xl font-bold text-white mb-6 text-glow">Your Online Payments (Awaiting Warden Approval)</h2>
+            <div className="glass-card overflow-hidden">
+              <table className="w-full text-left">
+                <thead className="bg-white/5 text-slate-400 text-xs uppercase font-bold tracking-widest">
+                  <tr>
+                    <th className="px-6 py-4">Amount</th>
+                    <th className="px-6 py-4">Transaction ID</th>
+                    <th className="px-6 py-4">Date Submitted</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Remarks / Warden Feedback</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {paymentRequests.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-8 text-center text-slate-500">No payment requests submitted yet.</td>
+                    </tr>
+                  ) : (
+                    paymentRequests.map(req => (
+                      <tr key={req.request_id} className="hover:bg-white/[0.02]">
+                        <td className="px-6 py-4 font-bold text-emerald-400">
+                          ₹{parseFloat(req.amount).toLocaleString()}
+                        </td>
+                        <td className="px-6 py-4 text-xs font-mono text-slate-300">
+                          {req.transaction_id}
+                        </td>
+                        <td className="px-6 py-4 text-xs text-slate-400">
+                          {new Date(req.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase border ${
+                            req.status === 'approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                            req.status === 'rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                            'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}>
+                            {req.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-slate-400 italic">
+                          {req.remarks || '-'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Record Payment Modal */}
         {showPayModal && (
@@ -264,6 +472,17 @@ const FeeList = () => {
                     />
                   </div>
                 </div>
+
+                {user.role === 'student' && (
+                  <div className="mb-4">
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">Transaction ID / Reference (UPI/NEFT/Bank)</label>
+                    <input 
+                      type="text" placeholder="Enter Transaction Reference ID..." required 
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm outline-none focus:border-indigo-500 transition-all font-bold"
+                      value={transactionId} onChange={(e) => setTransactionId(e.target.value)}
+                    />
+                  </div>
+                )}
 
                 {payAmount && (
                   <div className="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-xl flex justify-between items-center">

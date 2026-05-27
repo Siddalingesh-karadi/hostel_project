@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { HiSearch, HiUserAdd, HiPencil, HiTrash } from 'react-icons/hi';
+import { HiSearch, HiUserAdd, HiPencil, HiTrash, HiUserRemove } from 'react-icons/hi';
 
 const StudentList = () => {
   const [students, setStudents] = useState([]);
@@ -11,6 +11,7 @@ const StudentList = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [activeTab, setActiveTab] = useState('active');
   const [formData, setFormData] = useState({
     name: '', email: '', course: '', branch: '', year: '', phone: '', blood_group: '', address: '',
     parent_name: '', parent_phone: '', aadhar_number: '', age: '', permanent_address: '',
@@ -107,10 +108,26 @@ const StudentList = () => {
     }
   };
 
-  const filteredStudents = students.filter(student => 
-    student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.student_number?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleMarkLeft = async (id) => {
+    if (!window.confirm('Are you sure this student has left the hostel permanently? This will free up their room.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`/api/students/${id}/left`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Student successfully marked as left and room deallocated.');
+      fetchStudents();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update student status');
+    }
+  };
+
+  const filteredStudents = students.filter(student => {
+    const matchesSearch = student.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      student.student_number?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === 'left' ? student.status === 'left' : student.status !== 'left';
+    return matchesSearch && matchesTab;
+  });
 
   return (
     <div className="min-h-screen bg-slate-950 p-8 text-slate-100">
@@ -118,7 +135,9 @@ const StudentList = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-white mb-2 text-glow">Student Directory</h1>
-            <p className="text-slate-400">Total Registered: {students.length} | Click a name to view full details</p>
+            <p className="text-slate-400">
+              Active Students: {students.filter(s => s.status !== 'left').length} | Left Hostel: {students.filter(s => s.status === 'left').length}
+            </p>
           </div>
           {(user.role === 'admin' || user.role === 'warden') && (
             <button onClick={handleOpenAdd} className="btn-primary flex items-center gap-2">
@@ -214,6 +233,22 @@ const StudentList = () => {
           </div>
         )}
 
+        {/* Tab Buttons */}
+        <div className="flex gap-4 mb-6 border-b border-white/5 pb-2">
+          <button 
+            onClick={() => setActiveTab('active')}
+            className={`px-4 py-2 font-bold text-sm transition-all rounded-lg ${activeTab === 'active' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+          >
+            Active Students ({students.filter(s => s.status !== 'left').length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('left')}
+            className={`px-4 py-2 font-bold text-sm transition-all rounded-lg ${activeTab === 'left' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+          >
+            Left Hostel ({students.filter(s => s.status === 'left').length})
+          </button>
+        </div>
+
         <div className="glass-card overflow-hidden">
           <div className="p-6 border-b border-white/5 flex items-center gap-4 bg-white/5">
             <HiSearch className="text-slate-500 text-xl" />
@@ -263,9 +298,20 @@ const StudentList = () => {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button onClick={() => handleOpenEdit(student)} className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all"><HiPencil /></button>
+                      {student.status !== 'left' && (
+                        <button onClick={() => handleOpenEdit(student)} className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-all" title="Edit Student"><HiPencil /></button>
+                      )}
+                      {student.status !== 'left' && (user.role === 'admin' || user.role === 'warden') && (
+                        <button 
+                          onClick={() => handleMarkLeft(student.student_id)} 
+                          className="p-2 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-all"
+                          title="Mark as Left"
+                        >
+                          <HiUserRemove />
+                        </button>
+                      )}
                       {user.role === 'admin' && (
-                        <button onClick={() => handleDeleteStudent(student.student_id)} className="p-2 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-all"><HiTrash /></button>
+                        <button onClick={() => handleDeleteStudent(student.student_id)} className="p-2 hover:bg-rose-500/20 text-rose-400 rounded-lg transition-all" title="Delete Record"><HiTrash /></button>
                       )}
                     </div>
                   </td>

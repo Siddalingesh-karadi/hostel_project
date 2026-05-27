@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS students (
     blood_group VARCHAR(5),
     address TEXT,
     room_id INT NULL,
+    status ENUM('active', 'left') DEFAULT 'active',
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -75,3 +76,18 @@ CREATE TABLE IF NOT EXISTS leave_requests (
 
 -- Link students to rooms correctly
 ALTER TABLE students ADD FOREIGN KEY (room_id) REFERENCES rooms(room_id) ON DELETE SET NULL;
+
+-- 7. Fee Payment Requests Table
+CREATE TABLE IF NOT EXISTS fee_payment_requests (
+    request_id INT PRIMARY KEY AUTO_INCREMENT,
+    fee_id INT NOT NULL,
+    student_id INT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_id VARCHAR(100) NOT NULL,
+    status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
+    remarks VARCHAR(255) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (fee_id) REFERENCES fees(fee_id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
+);
+

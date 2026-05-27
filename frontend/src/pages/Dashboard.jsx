@@ -4,12 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { 
   HiUserGroup, HiOfficeBuilding, HiExclamation, HiCurrencyRupee, 
   HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup,
-  HiLightningBolt, HiOutlineX, HiShieldCheck
+  HiLightningBolt, HiOutlineX, HiShieldCheck, HiUserRemove
 } from 'react-icons/hi';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
-    totalStudents: 0, occupancy: '0/0', pendingComplaints: 0, unpaidFees: 0
+    totalStudents: 0, leftStudents: 0, occupancy: '0/0', pendingComplaints: 0, unpaidFees: 0
   });
   const [broadcasts, setBroadcasts] = useState([]);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
@@ -149,10 +149,10 @@ const Dashboard = () => {
 
         <h1 className="text-3xl font-bold text-white mb-2 text-glow">Hostel Overview</h1>
         <p className="text-slate-400 mb-10">Welcome back, {user.name}. Here is what's happening today.</p>
-        <div className={`grid grid-cols-1 md:grid-cols-2 ${user.role === 'admin' ? 'lg:grid-cols-4' : 'lg:grid-cols-3'} gap-6`}>
-          <StatCard title="Total Students" value={stats.totalStudents} icon={<HiUserGroup />} color="bg-indigo-500" onClick={() => navigate('/students')} />
+        <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6`}>
+          <StatCard title="Active Students" value={stats.totalStudents} icon={<HiUserGroup />} color="bg-indigo-500" onClick={() => navigate('/students')} />
+          <StatCard title="Left Hostel" value={stats.leftStudents || 0} icon={<HiUserRemove />} color="bg-rose-500" onClick={() => navigate('/students')} />
           <StatCard title="Total Rooms" value={stats.totalRooms || 0} icon={<HiOfficeBuilding />} color="bg-cyan-500" onClick={() => navigate('/rooms')} />
-
           <StatCard title="Occupancy" value={stats.occupancy} icon={<HiOfficeBuilding />} color="bg-emerald-500" onClick={() => navigate('/rooms')} />
           <StatCard title="Pending" value={stats.pendingComplaints} icon={<HiExclamation />} color="bg-rose-500" onClick={() => navigate('/complaints')} />
           {user.role === 'admin' && (
