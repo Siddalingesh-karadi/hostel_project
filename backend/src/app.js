@@ -36,6 +36,8 @@ const messageRoutes = require('./routes/messageRoutes');
 const staffRoutes = require('./routes/staffRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const gateRoutes = require('./routes/gateRoutes');
+const qrAttendanceRoutes = require('./routes/qrAttendanceRoutes');
+const parentRoutes = require('./routes/parentRoutes');
 
 
 // Routes
@@ -65,6 +67,8 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/staff', staffRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/gate', gateRoutes);
+app.use('/api/qr-attendance', qrAttendanceRoutes);
+app.use('/api/parents', parentRoutes);
 
 
 // Simple Error Handling

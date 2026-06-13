@@ -30,6 +30,19 @@ import StaffProfile from './pages/StaffProfile';
 import SecurityScan from './pages/SecurityScan';
 import StudentNetwork from './pages/StudentNetwork';
 
+// QR Attendance Pages
+import QrAttendanceAdmin from './pages/QrAttendanceAdmin';
+import QrAttendanceScan from './pages/QrAttendanceScan';
+
+// Parent Portal Pages
+import ParentDashboard from './pages/ParentDashboard';
+import ParentAttendance from './pages/ParentAttendance';
+import ParentFees from './pages/ParentFees';
+import ParentLeaves from './pages/ParentLeaves';
+import ParentComplaints from './pages/ParentComplaints';
+import ParentNotifications from './pages/ParentNotifications';
+import ManageParents from './pages/ManageParents';
+
 
 const App = () => {
   return (
@@ -59,6 +72,19 @@ const App = () => {
         <Route path="/staff-profile" element={<ProtectedRoute><Layout><StaffProfile /></Layout></ProtectedRoute>} />
         <Route path="/security-scan" element={<ProtectedRoute><Layout><SecurityScan /></Layout></ProtectedRoute>} />
         <Route path="/network" element={<ProtectedRoute><Layout><StudentNetwork /></Layout></ProtectedRoute>} />
+
+        {/* QR Attendance Routes */}
+        <Route path="/qr-attendance" element={<ProtectedRoute><Layout><QrAttendanceAdmin /></Layout></ProtectedRoute>} />
+        <Route path="/qr-scan" element={<ProtectedRoute><Layout><QrAttendanceScan /></Layout></ProtectedRoute>} />
+
+        {/* Parent Portal Routes */}
+        <Route path="/parent/dashboard" element={<ProtectedRoute><Layout><ParentDashboard /></Layout></ProtectedRoute>} />
+        <Route path="/parent/attendance" element={<ProtectedRoute><Layout><ParentAttendance /></Layout></ProtectedRoute>} />
+        <Route path="/parent/fees" element={<ProtectedRoute><Layout><ParentFees /></Layout></ProtectedRoute>} />
+        <Route path="/parent/leaves" element={<ProtectedRoute><Layout><ParentLeaves /></Layout></ProtectedRoute>} />
+        <Route path="/parent/complaints" element={<ProtectedRoute><Layout><ParentComplaints /></Layout></ProtectedRoute>} />
+        <Route path="/parent/notifications" element={<ProtectedRoute><Layout><ParentNotifications /></Layout></ProtectedRoute>} />
+        <Route path="/manage-parents" element={<ProtectedRoute><Layout><ManageParents /></Layout></ProtectedRoute>} />
 
       </Routes>
     </Router>

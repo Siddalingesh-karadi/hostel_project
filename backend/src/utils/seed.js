@@ -247,6 +247,75 @@ const updateDatabase = async () => {
       )
     `);
 
+    // 4m. Create QR attendance sessions table
+    console.log('Creating qr_attendance_sessions table...');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS qr_attendance_sessions (
+        session_id INT PRIMARY KEY AUTO_INCREMENT,
+        title VARCHAR(255) NOT NULL,
+        session_token VARCHAR(255) NOT NULL UNIQUE,
+        created_by INT NOT NULL,
+        expires_at DATETIME NOT NULL,
+        status ENUM('active', 'expired', 'closed') DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // 4n. Create QR attendance records table
+    console.log('Creating qr_attendance_records table...');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS qr_attendance_records (
+        record_id INT PRIMARY KEY AUTO_INCREMENT,
+        session_id INT NOT NULL,
+        student_id INT NOT NULL,
+        marked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (session_id) REFERENCES qr_attendance_sessions(session_id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+        UNIQUE KEY unique_session_student (session_id, student_id)
+      )
+    `);
+
+    // 4o. Update users role enum to include 'parent'
+    console.log('Updating user roles for parent...');
+    try {
+      await db.query(`
+        ALTER TABLE users 
+        MODIFY COLUMN role ENUM('admin', 'student', 'warden', 'housekeeper', 'security', 'parent') DEFAULT 'student'
+      `);
+    } catch (e) { /* ignore if already updated */ }
+
+    // 4p. Create parent_student_mapping table
+    console.log('Creating parent_student_mapping table...');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS parent_student_mapping (
+        mapping_id INT PRIMARY KEY AUTO_INCREMENT,
+        parent_user_id INT NOT NULL,
+        student_id INT NOT NULL,
+        relationship ENUM('father', 'mother', 'guardian') DEFAULT 'guardian',
+        phone VARCHAR(15),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (parent_user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+        UNIQUE KEY unique_parent_student (parent_user_id, student_id)
+      )
+    `);
+
+    // 4q. Create notifications table
+    console.log('Creating notifications table...');
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        notification_id INT PRIMARY KEY AUTO_INCREMENT,
+        user_id INT NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        type ENUM('attendance', 'fee', 'leave', 'complaint', 'notice', 'general') DEFAULT 'general',
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
     // 4l. Create fee_payment_requests table
     console.log('Creating fee_payment_requests table...');
     await db.query(`
@@ -267,13 +336,15 @@ const updateDatabase = async () => {
 
     // Seed profiles for existing staff
     console.log('Seeding staff profiles...');
-    const [staffUsers] = await db.query('SELECT id, role FROM users WHERE role IN ("warden", "admin", "housekeeper", "security")');
-    for (const s of staffUsers) {
-      const [existing] = await db.query('SELECT * FROM staff_profiles WHERE user_id = ?', [s.id]);
-      if (existing.length === 0) {
-        await db.query('INSERT INTO staff_profiles (user_id, designation) VALUES (?, ?)', [s.id, s.role.toUpperCase()]);
+    try {
+      const [staffUsers] = await db.query('SELECT id, role FROM users WHERE role IN ("warden", "admin", "housekeeper", "security")');
+      for (const s of staffUsers) {
+        const [existing] = await db.query('SELECT * FROM staff_profiles WHERE user_id = ?', [s.id]);
+        if (existing.length === 0) {
+          await db.query('INSERT INTO staff_profiles (user_id) VALUES (?)', [s.id]);
+        }
       }
-    }
+    } catch (e) { console.log('⚠️ Staff profile seeding skipped (table may differ):', e.message); }
     const [studentCount] = await db.query('SELECT COUNT(*) as count FROM students');
     if (studentCount[0].count === 0) {
       console.log('Seeding sample data...');

@@ -5,7 +5,7 @@ import {
   HiHome, HiUserGroup, HiOfficeBuilding, HiExclamation, 
   HiCurrencyRupee, HiLogout, HiClipboardList, 
   HiOutlineSpeakerphone, HiOutlineCube, HiOutlineCalendar, HiOutlineUserGroup,
-  HiShieldCheck, HiChatAlt2, HiLightningBolt
+  HiShieldCheck, HiChatAlt2, HiLightningBolt, HiQrcode, HiBell, HiCheckCircle
 } from 'react-icons/hi';
 
 
@@ -36,6 +36,7 @@ const Sidebar = () => {
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: <HiHome />, roles: ['admin', 'warden', 'student', 'security'] },
+    { name: 'Dashboard', path: '/parent/dashboard', icon: <HiHome />, roles: ['parent'] },
 
     { name: 'My Profile', path: '/profile', icon: <HiUserGroup />, roles: ['student'] },
     { name: 'Work Profile', path: '/staff-profile', icon: <HiUserGroup />, roles: ['admin', 'warden', 'security'] },
@@ -55,6 +56,20 @@ const Sidebar = () => {
     { name: 'Duty Roster', path: '/security', icon: <HiShieldCheck />, roles: ['security'] },
 
     { name: 'Messages', path: '/admin-messages', icon: <HiChatAlt2 />, roles: ['admin', 'warden', 'student'] },
+
+    // QR Attendance
+    { name: 'QR Attendance', path: '/qr-attendance', icon: <HiQrcode />, roles: ['admin', 'warden'] },
+    { name: 'Scan QR', path: '/qr-scan', icon: <HiQrcode />, roles: ['student'] },
+
+    // Parent Portal (parent role)
+    { name: 'Attendance', path: '/parent/attendance', icon: <HiCheckCircle />, roles: ['parent'] },
+    { name: 'Fees', path: '/parent/fees', icon: <HiCurrencyRupee />, roles: ['parent'] },
+    { name: 'Leaves', path: '/parent/leaves', icon: <HiClipboardList />, roles: ['parent'] },
+    { name: 'Complaints', path: '/parent/complaints', icon: <HiExclamation />, roles: ['parent'] },
+    { name: 'Notifications', path: '/parent/notifications', icon: <HiBell />, roles: ['parent'] },
+
+    // Admin: Manage Parents
+    { name: 'Parents', path: '/manage-parents', icon: <HiUserGroup />, roles: ['admin', 'warden'] },
   ];
 
 
